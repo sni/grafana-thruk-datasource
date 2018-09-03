@@ -1,0 +1,39 @@
+{
+  "name": "Thruk",
+  "id": "sni-thruk-datasource",
+  "type": "datasource",
+
+  "partials": {
+    "config": "public/app/plugins/datasource/thruk/partials/config.html"
+  },
+
+  "includes": [
+  ],
+
+  "metrics": true,
+  "annotations": true,
+
+  "info": {
+    "description": "thruk datasource",
+    "author": {
+      "name": "Sven Nierlein",
+      "email": "sven.nierlein@consol.de",
+      "url": "http://labs.consol.de"
+    },
+    "logos": {
+      "small": "src/img/logo.svg",
+      "large": "src/img/logo.svg"
+    },
+    "links": [
+      {"name": "GitHub", "url": "https://github.com/sni/grafana-thruk-datasource"},
+      {"name": "MIT License", "url": "https://github.com/sni/grafana-thruk-datasource/blob/master/LICENSE"}
+    ],
+    "version": "1.0.0",
+    "updated": "2018-08-31"
+  },
+
+  "dependencies": {
+    "grafanaVersion": "5.x.x",
+    "plugins": [ ]
+  }
+}
