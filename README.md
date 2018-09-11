@@ -41,6 +41,11 @@ Uses direct access. Thruk must be accessible from the public.
     - Access 'direct'
     - Http Auth 'With Credentials'
 
+### Table Queries
+
+Using the table panel, you can display most data from the rest api. However
+only text and numbers can be displayed in a sane way.
+
 ### Variable Queries
 
 Thruks rest api can be used to fill grafana variables. For example to get all
