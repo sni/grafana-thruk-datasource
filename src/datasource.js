@@ -1,4 +1,5 @@
 import _ from "lodash";
+import TableModel from 'app/core/table_model';
 
 export class ThrukDatasource {
 
@@ -77,6 +78,43 @@ export class ThrukDatasource {
       });
   }
 
+  query(options) {
+    // we can only handle a single query right now
+    for(var x=0; x<options.targets.length; x++) {
+      var table = new TableModel();
+      var target = options.targets[x];
+      var path = target.table
+      if(target.columns && target.columns != '*') {
+        path += "?columns="+target.columns;
+        target.columns.split(/\s*,\s*/).forEach(col => {
+          table.addColumn({ text: col });
+        });
+      }
+      if(target.condition) {
+        path += '&q='+encodeURIComponent(target.condition)
+      }
+      var requestOptions = this._requestOptions({
+        url: this.url + '/r/v1/'+path,
+        method: 'GET',
+      });
+      return this.backendSrv.datasourceRequest(requestOptions).then(function(result) {
+        _.map(result.data, (d, i) => {
+          table.rows.push(Object.values(d));
+        });
+        if(!(target.columns && target.columns != '*') && result.data[0]) {
+          Object.keys(result.data[0]).forEach(col => {
+            table.addColumn({ text: col });
+          });
+        }
+        return({
+          data: [
+            table
+          ]
+        });
+      });
+    }
+  }
+
   _requestOptions(options) {
     options = options || {};
     options.headers = options.headers || {};
@@ -92,6 +130,7 @@ export class ThrukDatasource {
 
   parseQuery(query) {
     query = this.templateSrv.replace(query, null, 'regex')
+    // TODO: support sort and limit
     var tmp = query.match(/^\s*SELECT\s+([\w_,\ ]+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))$/i);
     if(!tmp) {
       throw new Error("query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>]");

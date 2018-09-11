@@ -1,9 +1,9 @@
 'use strict';
 
-System.register(['lodash'], function (_export, _context) {
+System.register(['lodash', 'app/core/table_model'], function (_export, _context) {
   "use strict";
 
-  var _, _createClass, ThrukDatasource;
+  var _, TableModel, _createClass, ThrukDatasource;
 
   function _classCallCheck(instance, Constructor) {
     if (!(instance instanceof Constructor)) {
@@ -14,6 +14,8 @@ System.register(['lodash'], function (_export, _context) {
   return {
     setters: [function (_lodash) {
       _ = _lodash.default;
+    }, function (_appCoreTable_model) {
+      TableModel = _appCoreTable_model.default;
     }],
     execute: function () {
       _createClass = function () {
@@ -113,6 +115,42 @@ System.register(['lodash'], function (_export, _context) {
             });
           }
         }, {
+          key: 'query',
+          value: function query(options) {
+            // we can only handle a single query right now
+            for (var x = 0; x < options.targets.length; x++) {
+              var table = new TableModel();
+              var target = options.targets[x];
+              var path = target.table;
+              if (target.columns && target.columns != '*') {
+                path += "?columns=" + target.columns;
+                target.columns.split(/\s*,\s*/).forEach(function (col) {
+                  table.addColumn({ text: col });
+                });
+              }
+              if (target.condition) {
+                path += '&q=' + encodeURIComponent(target.condition);
+              }
+              var requestOptions = this._requestOptions({
+                url: this.url + '/r/v1/' + path,
+                method: 'GET'
+              });
+              return this.backendSrv.datasourceRequest(requestOptions).then(function (result) {
+                _.map(result.data, function (d, i) {
+                  table.rows.push(Object.values(d));
+                });
+                if (!(target.columns && target.columns != '*') && result.data[0]) {
+                  Object.keys(result.data[0]).forEach(function (col) {
+                    table.addColumn({ text: col });
+                  });
+                }
+                return {
+                  data: [table]
+                };
+              });
+            }
+          }
+        }, {
           key: '_requestOptions',
           value: function _requestOptions(options) {
             options = options || {};
@@ -130,6 +168,7 @@ System.register(['lodash'], function (_export, _context) {
           key: 'parseQuery',
           value: function parseQuery(query) {
             query = this.templateSrv.replace(query, null, 'regex');
+            // TODO: support sort and limit
             var tmp = query.match(/^\s*SELECT\s+([\w_,\ ]+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))$/i);
             if (!tmp) {
               throw new Error("query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>]");

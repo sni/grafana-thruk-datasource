@@ -8,42 +8,53 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
 
     this.scope = $scope;
     this.uiSegmentSrv     = uiSegmentSrv;
-    this.target.host      = this.target.host      || this.datasource.DEFAULT_HOST;
-    this.target.service   = this.target.service   || this.datasource.DEFAULT_SERVICE;
-    this.target.perflabel = this.target.perflabel || this.datasource.DEFAULT_PERFLABEL;
-    this.target.type      = this.target.type      || 'AVERAGE';
-    this.target.fill      = this.target.fill      || 'fill';
-    this.target.factor    = this.target.factor    || '';
+    this.target.table     = this.target.table     || '/';
+    this.target.columns   = this.target.columns   || '*';
+    this.target.condition = this.target.condition || '';
   }
 
-  getHost() {
-    return this.datasource.metricFindData("host", this.target, true)
+  getTables() {
+    var requestOptions = this.datasource._requestOptions({
+      url: this.datasource.url + '/r/v1/index?columns=url&protocol=get',
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return this.datasource.backendSrv.datasourceRequest(requestOptions)
+      .then(result => _.map(result.data, (d, i) => {
+        return { text: d.url, value: d.url };
+      }))
       .then(this.uiSegmentSrv.transformToSegments(false));
   }
 
-  getService() {
-    return this.datasource.metricFindData("service", this.target, true)
+  /*
+  getColumns() {
+    var requestOptions = this.datasource._requestOptions({
+      url: this.datasource.url + '/r/v1/'+this.target.table+'?limit=1',
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    return this.datasource.backendSrv.datasourceRequest(requestOptions)
+      .then(function(result) {
+        var data = [];
+        if(result.data[0]) {
+          Object.keys(result.data[0]).forEach(function(key) {
+            data.push({ text: key, value: key });
+          });
+        }
+        return(data);
+      })
       .then(this.uiSegmentSrv.transformToSegments(false));
   }
-
-  getPerflabel() {
-    return this.datasource.metricFindData("perflabel", this.target, true)
-      .then(this.uiSegmentSrv.transformToSegments(false));
-  }
+  */
 
   onChangeInternal() {
     this.panelCtrl.refresh();
   }
 
   getCollapsedText() {
-    if(this.target.perflabel == this.datasource.DEFAULT_PERFLABEL &&
-       this.target.host      == this.datasource.DEFAULT_HOST &&
-       this.target.service   == this.datasource.DEFAULT_SERVICE) {
-        return("click to edit query");
-    }
-    return(this.target.perflabel
-           +': '+this.target.host
-           +' - '+this.target.service
+    return('SELECT '+this.target.columns
+           +' FROM '+this.target.table
+           +' WHERE '+this.target.condition
            );
   }
 }

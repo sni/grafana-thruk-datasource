@@ -1,6 +1,16 @@
-<query-editor-row query-ctrl="ctrl">
+<query-editor-row query-ctrl="ctrl" can-collapse="true">
   <div class="gf-form-inline">
-    Thruk does not support metrics queries and is supposed to fill template variables or annotations only.<br>
-    If you have suggestions for other queries, open an issue here: <a href="https://github.com/sni/grafana-thruk-datasource/issues"></a>
+    <div class="gf-form">
+      <label class="gf-form-label query-keyword">SELECT</label>
+      <input type="text" class="gf-form-input" ng-model="ctrl.target.columns" spellcheck='false' placeholder="col1, col2" ng-blur="ctrl.refresh()">
+    </div>
+    <div class="gf-form">
+      <label class="gf-form-label query-keyword">FROM</label>
+      <metric-segment-model property="ctrl.target.table" get-options="ctrl.getTables()" on-change="ctrl.onChangeInternal()"></metric-segment-model>
+    </div>
+    <div class="gf-form gf-form--grow">
+      <label class="gf-form-label query-keyword">WHERE</label>
+      <input type="text" class="gf-form-input gf-form-label--grow" ng-model="ctrl.target.condition" spellcheck='false' placeholder="condition..." ng-blur="ctrl.refresh()">
+    </div>
   </div>
 </query-editor-row>

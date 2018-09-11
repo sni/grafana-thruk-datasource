@@ -68,29 +68,25 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
 
           _this.scope = $scope;
           _this.uiSegmentSrv = uiSegmentSrv;
-          _this.target.host = _this.target.host || _this.datasource.DEFAULT_HOST;
-          _this.target.service = _this.target.service || _this.datasource.DEFAULT_SERVICE;
-          _this.target.perflabel = _this.target.perflabel || _this.datasource.DEFAULT_PERFLABEL;
-          _this.target.type = _this.target.type || 'AVERAGE';
-          _this.target.fill = _this.target.fill || 'fill';
-          _this.target.factor = _this.target.factor || '';
+          _this.target.table = _this.target.table || '/';
+          _this.target.columns = _this.target.columns || '*';
+          _this.target.condition = _this.target.condition || '';
           return _this;
         }
 
         _createClass(ThrukDatasourceQueryCtrl, [{
-          key: 'getHost',
-          value: function getHost() {
-            return this.datasource.metricFindData("host", this.target, true).then(this.uiSegmentSrv.transformToSegments(false));
-          }
-        }, {
-          key: 'getService',
-          value: function getService() {
-            return this.datasource.metricFindData("service", this.target, true).then(this.uiSegmentSrv.transformToSegments(false));
-          }
-        }, {
-          key: 'getPerflabel',
-          value: function getPerflabel() {
-            return this.datasource.metricFindData("perflabel", this.target, true).then(this.uiSegmentSrv.transformToSegments(false));
+          key: 'getTables',
+          value: function getTables() {
+            var requestOptions = this.datasource._requestOptions({
+              url: this.datasource.url + '/r/v1/index?columns=url&protocol=get',
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            return this.datasource.backendSrv.datasourceRequest(requestOptions).then(function (result) {
+              return _.map(result.data, function (d, i) {
+                return { text: d.url, value: d.url };
+              });
+            }).then(this.uiSegmentSrv.transformToSegments(false));
           }
         }, {
           key: 'onChangeInternal',
@@ -100,10 +96,7 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
         }, {
           key: 'getCollapsedText',
           value: function getCollapsedText() {
-            if (this.target.perflabel == this.datasource.DEFAULT_PERFLABEL && this.target.host == this.datasource.DEFAULT_HOST && this.target.service == this.datasource.DEFAULT_SERVICE) {
-              return "click to edit query";
-            }
-            return this.target.perflabel + ': ' + this.target.host + ' - ' + this.target.service;
+            return 'SELECT ' + this.target.columns + ' FROM ' + this.target.table + ' WHERE ' + this.target.condition;
           }
         }]);
 
