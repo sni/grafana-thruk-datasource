@@ -98,14 +98,20 @@ export class ThrukDatasource {
         method: 'GET',
       });
       return this.backendSrv.datasourceRequest(requestOptions).then(function(result) {
-        _.map(result.data, (d, i) => {
-          table.rows.push(Object.values(d));
-        });
+        // extract columns from first result row unless specified
         if(!(target.columns && target.columns != '*') && result.data[0]) {
           Object.keys(result.data[0]).forEach(col => {
             table.addColumn({ text: col });
           });
         }
+        // add data rows
+        _.map(result.data, (d, i) => {
+          var row = [];
+          table.columns.forEach(col => {
+            row.push(d[col.text]);
+          });
+          table.rows.push(row);
+        });
         return({
           data: [
             table

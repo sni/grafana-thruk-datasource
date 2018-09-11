@@ -136,14 +136,20 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                 method: 'GET'
               });
               return this.backendSrv.datasourceRequest(requestOptions).then(function (result) {
-                _.map(result.data, function (d, i) {
-                  table.rows.push(Object.values(d));
-                });
+                // extract columns from first result row unless specified
                 if (!(target.columns && target.columns != '*') && result.data[0]) {
                   Object.keys(result.data[0]).forEach(function (col) {
                     table.addColumn({ text: col });
                   });
                 }
+                // add data rows
+                _.map(result.data, function (d, i) {
+                  var row = [];
+                  table.columns.forEach(function (col) {
+                    row.push(d[col.text]);
+                  });
+                  table.rows.push(row);
+                });
                 return {
                   data: [table]
                 };
