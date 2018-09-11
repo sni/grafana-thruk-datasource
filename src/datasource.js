@@ -87,7 +87,7 @@ export class ThrukDatasource {
       if(target.columns && target.columns != '*') {
         path += "?columns="+target.columns;
         target.columns.split(/\s*,\s*/).forEach(col => {
-          table.addColumn({ text: col });
+          this._addColumn(table, col);
         });
       }
       if(target.condition) {
@@ -101,14 +101,18 @@ export class ThrukDatasource {
         // extract columns from first result row unless specified
         if(!(target.columns && target.columns != '*') && result.data[0]) {
           Object.keys(result.data[0]).forEach(col => {
-            table.addColumn({ text: col });
+            this._addColumn(table, col);
           });
         }
         // add data rows
         _.map(result.data, (d, i) => {
           var row = [];
           table.columns.forEach(col => {
-            row.push(d[col.text]);
+            if(col.type == "time") {
+              row.push(d[col.text] * 1000);
+            } else {
+              row.push(d[col.text]);
+            }
           });
           table.rows.push(row);
         });
@@ -118,6 +122,14 @@ export class ThrukDatasource {
           ]
         });
       });
+    }
+  }
+
+  _addColumn(table, col) {
+    if(col.match(/^(last_|next_|time)/)) {
+      table.addColumn({ text: col, type: 'time' });
+    } else {
+      table.addColumn({ text: col });
     }
   }
 

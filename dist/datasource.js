@@ -117,6 +117,8 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
         }, {
           key: 'query',
           value: function query(options) {
+            var _this = this;
+
             // we can only handle a single query right now
             for (var x = 0; x < options.targets.length; x++) {
               var table = new TableModel();
@@ -125,7 +127,7 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
               if (target.columns && target.columns != '*') {
                 path += "?columns=" + target.columns;
                 target.columns.split(/\s*,\s*/).forEach(function (col) {
-                  table.addColumn({ text: col });
+                  _this._addColumn(table, col);
                 });
               }
               if (target.condition) {
@@ -136,17 +138,23 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                 method: 'GET'
               });
               return this.backendSrv.datasourceRequest(requestOptions).then(function (result) {
+                var _this2 = this;
+
                 // extract columns from first result row unless specified
                 if (!(target.columns && target.columns != '*') && result.data[0]) {
                   Object.keys(result.data[0]).forEach(function (col) {
-                    table.addColumn({ text: col });
+                    _this2._addColumn(table, col);
                   });
                 }
                 // add data rows
                 _.map(result.data, function (d, i) {
                   var row = [];
                   table.columns.forEach(function (col) {
-                    row.push(d[col.text]);
+                    if (col.type == "time") {
+                      row.push(d[col.text] * 1000);
+                    } else {
+                      row.push(d[col.text]);
+                    }
                   });
                   table.rows.push(row);
                 });
@@ -154,6 +162,15 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                   data: [table]
                 };
               });
+            }
+          }
+        }, {
+          key: '_addColumn',
+          value: function _addColumn(table, col) {
+            if (col.match(/^(last_|next_|time)/)) {
+              table.addColumn({ text: col, type: 'time' });
+            } else {
+              table.addColumn({ text: col });
             }
           }
         }, {
