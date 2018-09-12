@@ -9,8 +9,10 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
     this.scope = $scope;
     this.uiSegmentSrv     = uiSegmentSrv;
     this.target.table     = this.target.table     || '/';
-    this.target.columns   = this.target.columns   || '*';
+    this.target.columns   = this.target.columns   || ['*'];
     this.target.condition = this.target.condition || '';
+
+    this.setColSegments();
   }
 
   getTables() {
@@ -23,10 +25,10 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
       .then(result => _.map(result.data, (d, i) => {
         return { text: d.url, value: d.url };
       }))
-      .then(this.uiSegmentSrv.transformToSegments(false));
+      .then(this.uiSegmentSrv.transformToSegments(false))
+      .catch(this.datasource.handleQueryError.bind(this));
   }
 
-  /*
   getColumns() {
     var requestOptions = this.datasource._requestOptions({
       url: this.datasource.url + '/r/v1/'+this.target.table+'?limit=1',
@@ -36,6 +38,7 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
     return this.datasource.backendSrv.datasourceRequest(requestOptions)
       .then(function(result) {
         var data = [];
+        data.push({ text: '-- remove --', value: '-- remove --' });
         if(result.data[0]) {
           Object.keys(result.data[0]).forEach(function(key) {
             data.push({ text: key, value: key });
@@ -43,19 +46,52 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
         }
         return(data);
       })
-      .then(this.uiSegmentSrv.transformToSegments(false));
+      .then(this.uiSegmentSrv.transformToSegments(false))
+      .catch(this.datasource.handleQueryError.bind(this));
   }
-  */
+
+  tagSegmentUpdated(col,index) {
+    this.target.columns[index] = col.value;
+    if(col.value == "-- remove --") {
+      this.target.columns.splice(index, 1);
+    }
+    this.setColSegments();
+    this.onChangeInternal();
+    return;
+  }
+
+  setColSegments() {
+    this.colSegments = [];
+    if(!angular.isArray(this.target.columns)) {
+      if(!this.target.columns) {
+        this.target.columns = ['*'];
+      } else {
+        this.target.columns = this.target.columns.split("\s*,\s*");
+      }
+    }
+    this.target.columns.forEach(col => {
+      this.colSegments.push(this.uiSegmentSrv.newSegment({ value: col }));
+    });
+    if(this.colSegments.length == 0) {
+      this.colSegments.push(this.uiSegmentSrv.newSegment({ value: '*' }));
+    }
+    this.colSegments.push(this.uiSegmentSrv.newPlusButton());
+  }
 
   onChangeInternal() {
     this.panelCtrl.refresh();
   }
 
   getCollapsedText() {
-    return('SELECT '+this.target.columns
-           +' FROM '+this.target.table
-           +' WHERE '+this.target.condition
-           );
+    var query = 'SELECT '+this.target.columns.join(',')
+               +' FROM '+this.target.table;
+    if(this.target.condition) {
+      query +=  ' WHERE '+this.target.condition
+    }
+    if(this.target.limit) {
+      query +=  ' LIMIT '+this.target.limit
+    }
+    return(query);
   }
 }
 

@@ -69,8 +69,10 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
           _this.scope = $scope;
           _this.uiSegmentSrv = uiSegmentSrv;
           _this.target.table = _this.target.table || '/';
-          _this.target.columns = _this.target.columns || '*';
+          _this.target.columns = _this.target.columns || ['*'];
           _this.target.condition = _this.target.condition || '';
+
+          _this.setColSegments();
           return _this;
         }
 
@@ -86,7 +88,58 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
               return _.map(result.data, function (d, i) {
                 return { text: d.url, value: d.url };
               });
-            }).then(this.uiSegmentSrv.transformToSegments(false));
+            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource.handleQueryError.bind(this));
+          }
+        }, {
+          key: 'getColumns',
+          value: function getColumns() {
+            var requestOptions = this.datasource._requestOptions({
+              url: this.datasource.url + '/r/v1/' + this.target.table + '?limit=1',
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' }
+            });
+            return this.datasource.backendSrv.datasourceRequest(requestOptions).then(function (result) {
+              var data = [];
+              data.push({ text: '-- remove --', value: '-- remove --' });
+              if (result.data[0]) {
+                Object.keys(result.data[0]).forEach(function (key) {
+                  data.push({ text: key, value: key });
+                });
+              }
+              return data;
+            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource.handleQueryError.bind(this));
+          }
+        }, {
+          key: 'tagSegmentUpdated',
+          value: function tagSegmentUpdated(col, index) {
+            this.target.columns[index] = col.value;
+            if (col.value == "-- remove --") {
+              this.target.columns.splice(index, 1);
+            }
+            this.setColSegments();
+            this.onChangeInternal();
+            return;
+          }
+        }, {
+          key: 'setColSegments',
+          value: function setColSegments() {
+            var _this2 = this;
+
+            this.colSegments = [];
+            if (!angular.isArray(this.target.columns)) {
+              if (!this.target.columns) {
+                this.target.columns = ['*'];
+              } else {
+                this.target.columns = this.target.columns.split("\s*,\s*");
+              }
+            }
+            this.target.columns.forEach(function (col) {
+              _this2.colSegments.push(_this2.uiSegmentSrv.newSegment({ value: col }));
+            });
+            if (this.colSegments.length == 0) {
+              this.colSegments.push(this.uiSegmentSrv.newSegment({ value: '*' }));
+            }
+            this.colSegments.push(this.uiSegmentSrv.newPlusButton());
           }
         }, {
           key: 'onChangeInternal',
@@ -96,7 +149,14 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
         }, {
           key: 'getCollapsedText',
           value: function getCollapsedText() {
-            return 'SELECT ' + this.target.columns + ' FROM ' + this.target.table + ' WHERE ' + this.target.condition;
+            var query = 'SELECT ' + this.target.columns.join(',') + ' FROM ' + this.target.table;
+            if (this.target.condition) {
+              query += ' WHERE ' + this.target.condition;
+            }
+            if (this.target.limit) {
+              query += ' LIMIT ' + this.target.limit;
+            }
+            return query;
           }
         }]);
 

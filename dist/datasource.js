@@ -65,24 +65,25 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
           key: 'annotationQuery',
           value: function annotationQuery(options) {
             var query = this.parseQuery(options.annotation.query);
-            if (query.table == 'logs' || query.table == '/logs') {
-              query.columns = "time,message,type";
+            var path = query.table.replace(/^\//, '');
+            if (query.columns[0] != "time") {
+              throw new Error("query syntax error, first column must be 'time' for annotations.");
             }
-            var path = query.table + "?columns=" + query.columns;
+            var params = {
+              columns: query.columns
+            };
             if (query.where) {
               query.where += " AND ";
             }
             query.where += " time > " + Math.floor(options.range.from.toDate().getTime() / 1000);
             query.where += " AND time < " + Math.floor(options.range.to.toDate().getTime() / 1000);
-            if (query.where) {
-              path += '&q=' + encodeURIComponent(query.where);
-            }
+            params.q = query.where;
 
             var requestOptions = this._requestOptions({
               url: this.url + '/r/v1/' + path,
-              method: 'GET'
+              method: 'GET',
+              params: params
             });
-            // TODO: catch wrong column or other rest api errors
             return this.backendSrv.datasourceRequest(requestOptions).then(function (result) {
               return _.map(result.data, function (d, i) {
                 return {
@@ -93,7 +94,7 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                   "tags": d['type']
                 };
               });
-            });
+            }).catch(this.handleQueryError.bind(this));
           }
         }, {
           key: 'metricFindQuery',
@@ -107,43 +108,58 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
               url: this.url + '/r/v1/' + path,
               method: 'GET'
             });
-            // TODO: catch wrong column or other rest api errors
             return this.backendSrv.datasourceRequest(requestOptions).then(function (result) {
               return _.map(result.data, function (d, i) {
                 return { text: Object.values(d).join(';'), value: Object.values(d).join(';') };
               });
-            });
+            }).catch(this.handleQueryError.bind(this));
           }
         }, {
           key: 'query',
           value: function query(options) {
-            var _this = this;
-
+            var This = this;
             // we can only handle a single query right now
             for (var x = 0; x < options.targets.length; x++) {
               var table = new TableModel();
               var target = options.targets[x];
               var path = target.table;
-              if (target.columns && target.columns != '*') {
-                path += "?columns=" + target.columns;
-                target.columns.split(/\s*,\s*/).forEach(function (col) {
-                  _this._addColumn(table, col);
+              var hasColumns = false;
+              var params = {};
+
+              if (!path) {
+                return This.$q.when([]);
+              }
+              path = path.replace(/^\//, '');
+
+              if (!target.columns) {
+                target.columns = [];
+              }
+              if (target.columns[0] == '*') {
+                target.columns.shift();
+              }
+              if (target.columns.length > 0) {
+                params.columns = target.columns.join(',');
+                target.columns.forEach(function (col) {
+                  This._addColumn(table, col);
                 });
+                hasColumns = true;
               }
               if (target.condition) {
-                path += '&q=' + encodeURIComponent(target.condition);
+                params.q = this.templateSrv.replace(target.condition, null, 'glob');
               }
-              var requestOptions = this._requestOptions({
-                url: this.url + '/r/v1/' + path,
-                method: 'GET'
+              if (target.limit) {
+                params.limit = target.limit;
+              }
+              var requestOptions = This._requestOptions({
+                url: This.url + '/r/v1/' + path,
+                method: 'GET',
+                params: params
               });
-              return this.backendSrv.datasourceRequest(requestOptions).then(function (result) {
-                var _this2 = this;
-
+              return This.backendSrv.datasourceRequest(requestOptions).then(function (result) {
                 // extract columns from first result row unless specified
-                if (!(target.columns && target.columns != '*') && result.data[0]) {
+                if (!hasColumns && result.data[0]) {
                   Object.keys(result.data[0]).forEach(function (col) {
-                    _this2._addColumn(table, col);
+                    This._addColumn(table, col);
                   });
                 }
                 // add data rows
@@ -161,7 +177,7 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                 return {
                   data: [table]
                 };
-              });
+              }).catch(this.handleQueryError.bind(this));
             }
           }
         }, {
@@ -190,17 +206,30 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
         }, {
           key: 'parseQuery',
           value: function parseQuery(query) {
-            query = this.templateSrv.replace(query, null, 'regex');
-            // TODO: support sort and limit
-            var tmp = query.match(/^\s*SELECT\s+([\w_,\ ]+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))$/i);
+            query = this.templateSrv.replace(query, null, 'glob');
+            var tmp = query.match(/^\s*SELECT\s+([\w_,\ ]+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))(|\s+LIMIT\s+(\d+))$/i);
             if (!tmp) {
-              throw new Error("query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>]");
+              throw new Error("query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>] [LIMIT <limi>]");
             }
             return {
               columns: tmp[1].replace(/\s+/g, ''),
               table: tmp[2],
-              where: tmp[4]
+              where: tmp[4],
+              limit: tmp[6]
             };
+          }
+        }, {
+          key: 'handleQueryError',
+          value: function handleQueryError(err) {
+            console.log(err);
+            if (err.data.code && err.data.code > 400) {
+              var error = "query error: " + err.data.message;
+              if (err.data.description) {
+                error += " - " + err.data.description;
+              }
+              throw new Error(error);
+            }
+            return [];
           }
         }]);
 
