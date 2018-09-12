@@ -88,7 +88,7 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
               return _.map(result.data, function (d, i) {
                 return { text: d.url, value: d.url };
               });
-            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource.handleQueryError.bind(this));
+            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource._handleQueryError.bind(this));
           }
         }, {
           key: 'getColumns',
@@ -107,7 +107,7 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
                 });
               }
               return data;
-            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource.handleQueryError.bind(this));
+            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource._handleQueryError.bind(this));
           }
         }, {
           key: 'tagSegmentUpdated',

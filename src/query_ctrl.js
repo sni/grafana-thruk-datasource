@@ -26,7 +26,7 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
         return { text: d.url, value: d.url };
       }))
       .then(this.uiSegmentSrv.transformToSegments(false))
-      .catch(this.datasource.handleQueryError.bind(this));
+      .catch(this.datasource._handleQueryError.bind(this));
   }
 
   getColumns() {
@@ -47,7 +47,7 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
         return(data);
       })
       .then(this.uiSegmentSrv.transformToSegments(false))
-      .catch(this.datasource.handleQueryError.bind(this));
+      .catch(this.datasource._handleQueryError.bind(this));
   }
 
   tagSegmentUpdated(col,index) {

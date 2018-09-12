@@ -60,9 +60,32 @@ hosts of a certain hostgroup, use this example query:
 Annotation queries can be used to add logfile entries into your graphs.
 Please note that annotations are shared across all graphs in a dashboard.
 
+It is important to append the time filter like in this example:
+
 ```
-  SELECT time, message FROM logs WHERE host_name = 'test'
+  SELECT time, message FROM logs WHERE host_name = 'test' and time = $time
 ```
+
+### Using Variables
+
+Dashboard variables can be used in almost all queries. For example if you
+define a dashboard variable named `host` you can then use `$host` in your
+queries.
+
+There is a special syntax for time filter: `field = $time` which will be
+replaced by `(field >= starttime AND field <= endtime)`. This can be used to
+reduce results to the dashboards timeframe.
+
+```
+  SELECT time, message FROM /hosts/$host/alerts WHERE time = $time
+```
+
+which is the same as
+
+```
+  SELECT time, message FROM /alerts WHERE host_name = "$host" AND time = $time
+```
+
 
 #### Changelog
 

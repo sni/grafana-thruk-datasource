@@ -12,6 +12,7 @@ export class ThrukDatasource {
     this.basicAuth = instanceSettings.basicAuth;
   }
 
+  // testDatasource is used on the datasource options page
   testDatasource() {
     var requestOptions = this._requestOptions({
       url: this.url + '/r/v1/',
@@ -25,8 +26,9 @@ export class ThrukDatasource {
       });
   }
 
+  // annotationQuery returns annotations
   annotationQuery(options) {
-    var query = this.parseQuery(options.annotation.query);
+    var query = this._parseQuery(this._replaceVariables(options.annotation.query, options.range));
     var path = query.table.replace(/^\//, '');
     if(query.columns[0] != "time") {
       throw new Error("query syntax error, first column must be 'time' for annotations.");
@@ -34,11 +36,6 @@ export class ThrukDatasource {
     var params = {
       columns: query.columns
     };
-    if(query.where) {
-      query.where += " AND ";
-    }
-    query.where += " time > "+Math.floor(options.range.from.toDate().getTime()/1000);
-    query.where += " AND time < "+Math.floor(options.range.to.toDate().getTime()/1000);
     params.q = query.where;
 
     var requestOptions = this._requestOptions({
@@ -58,12 +55,14 @@ export class ThrukDatasource {
           };
         });
       })
-      .catch(this.handleQueryError.bind(this));
+      .catch(this._handleQueryError.bind(this));
   }
 
+  // metricFindQuery gets called from variables page
   metricFindQuery(options) {
-    var query = this.parseQuery(options);
+    var query = this._parseQuery(this._replaceVariables(options));
     var path = query.table+"?columns="+query.columns;
+    path = path.replace(/^\//, '');
     if(query.where) {
       path += '&q='+encodeURIComponent(query.where)
     }
@@ -77,9 +76,10 @@ export class ThrukDatasource {
           return { text: Object.values(d).join(';'), value: Object.values(d).join(';') };
         });
       })
-      .catch(this.handleQueryError.bind(this));
+      .catch(this._handleQueryError.bind(this));
   }
 
+  // query gets called from table panels
   query(options) {
     var This = this;
     // we can only handle a single query right now
@@ -94,6 +94,7 @@ export class ThrukDatasource {
         return(This.$q.when([]));
       }
       path = path.replace(/^\//, '');
+      path = this._replaceVariables(path, options.range);
 
       if(!target.columns) { target.columns = []; }
       if(target.columns[0] == '*') {
@@ -107,7 +108,7 @@ export class ThrukDatasource {
         hasColumns = true;
       }
       if(target.condition) {
-        params.q = this.templateSrv.replace(target.condition, null, 'glob')
+        params.q = this._replaceVariables(target.condition, options.range);
       }
       if(target.limit) {
         params.limit = target.limit;
@@ -142,7 +143,7 @@ export class ThrukDatasource {
           ]
         });
       })
-      .catch(this.handleQueryError.bind(this));
+      .catch(this._handleQueryError.bind(this));
     }
   }
 
@@ -167,8 +168,7 @@ export class ThrukDatasource {
     return(options);
   }
 
-  parseQuery(query) {
-    query = this.templateSrv.replace(query, null, 'glob')
+  _parseQuery(query) {
     var tmp = query.match(/^\s*SELECT\s+([\w_,\ ]+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))(|\s+LIMIT\s+(\d+))$/i);
     if(!tmp) {
       throw new Error("query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>] [LIMIT <limi>]");
@@ -181,15 +181,35 @@ export class ThrukDatasource {
     });
   }
 
-  handleQueryError(err) {
+  _replaceVariables(str, range) {
+    str = this.templateSrv.replace(str, null, 'regex');
+    // replace time filter
+    if(range) {
+      var matches = str.match(/(\w+)\s*=\s*\$time/);
+      if(matches && matches[1]) {
+        var field = matches[1];
+        var timefilter = "("+field+ " > "+Math.floor(range.from.toDate().getTime()/1000);
+        timefilter    += " AND "+field+" < "+Math.floor(range.to.toDate().getTime()/1000);
+        timefilter    += ")";
+        str = str.replace(matches[0], timefilter);
+      }
+    }
+    return(str);
+  }
+
+  _handleQueryError(err) {
     console.log(err);
-    if(err.data.code && err.data.code > 400) {
+    if(err.data && err.data.code && err.data.code > 400) {
       var error = "query error: "+err.data.message;
       if(err.data.description) {
         error += " - "+err.data.description;
       }
       throw new Error(error);
     }
+    if(err.status && err.status > 400) {
+      throw new Error("query error: "+err.status+" - "+err.statusText);
+    }
+    throw new Error(err);
     return [];
   }
 }
