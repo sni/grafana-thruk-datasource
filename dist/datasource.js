@@ -222,14 +222,11 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
           value: function _replaceVariables(str, range, scopedVars) {
             str = this.templateSrv.replace(str, scopedVars, function (s) {
               if (s && angular.isArray(s)) {
-                var escaped = [];
-                s.forEach(function (v) {
-                  escaped.push(_.escapeRegExp(v));
-                });
-                return "^(" + escaped.join('|') + ')$';
+                return "^(" + s.join('|') + ')$';
               }
               return s;
             });
+
             // replace time filter
             if (range) {
               var matches = str.match(/(\w+)\s*=\s*\$time/);
@@ -243,15 +240,16 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
             }
 
             // fixup list regex filters
-            var matches = str.match(/([\w_]+)\s*>=\s*"\^\((.*?)\)\$"/);
+            var regex = new RegExp(/([\w_]+)\s*(>=|=)\s*"\^\((.*?)\)\$"/);
+            var matches = str.match(regex);
             while (matches) {
               var groups = [];
-              var segments = matches[2].split('|');
+              var segments = matches[3].split('|');
               segments.forEach(function (s) {
-                groups.push(matches[1] + ' >= "' + s + '"');
+                groups.push(matches[1] + ' ' + matches[2] + ' "' + s + '"');
               });
               str = str.replace(matches[0], '(' + groups.join(' OR ') + ')');
-              matches = str.match(/([\w_]+)\s*>=\s*"\^\((.*?)\)\$"/);
+              matches = str.match(regex);
             }
 
             return str;
