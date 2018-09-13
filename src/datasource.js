@@ -28,7 +28,7 @@ export class ThrukDatasource {
 
   // annotationQuery returns annotations
   annotationQuery(options) {
-    var query = this._parseQuery(this._replaceVariables(options.annotation.query, options.range));
+    var query = this._parseQuery(this._replaceVariables(options.annotation.query, options.range, options.scopedVars));
     var path = query.table.replace(/^\//, '');
     if(query.columns[0] != "time") {
       throw new Error("query syntax error, first column must be 'time' for annotations.");
@@ -94,7 +94,7 @@ export class ThrukDatasource {
         return(This.$q.when([]));
       }
       path = path.replace(/^\//, '');
-      path = this._replaceVariables(path, options.range);
+      path = this._replaceVariables(path, options.range, options.scopedVars);
 
       if(!target.columns) { target.columns = []; }
       if(target.columns[0] == '*') {
@@ -108,7 +108,7 @@ export class ThrukDatasource {
         hasColumns = true;
       }
       if(target.condition) {
-        params.q = this._replaceVariables(target.condition, options.range);
+        params.q = this._replaceVariables(target.condition, options.range, options.scopedVars);
       }
       if(target.limit) {
         params.limit = target.limit;
@@ -181,8 +181,17 @@ export class ThrukDatasource {
     });
   }
 
-  _replaceVariables(str, range) {
-    str = this.templateSrv.replace(str, null, 'regex');
+  _replaceVariables(str, range, scopedVars) {
+    str = this.templateSrv.replace(str, scopedVars, function(s) {
+      if(s && angular.isArray(s)) {
+        var escaped = [];
+        s.forEach(v => {
+          escaped.push(_.escapeRegExp(v));
+        });
+        return("^("+escaped.join('|')+')$');
+      }
+      return(s);
+    });
     // replace time filter
     if(range) {
       var matches = str.match(/(\w+)\s*=\s*\$time/);
@@ -194,6 +203,19 @@ export class ThrukDatasource {
         str = str.replace(matches[0], timefilter);
       }
     }
+
+    // fixup list regex filters
+    var matches = str.match(/([\w_]+)\s*>=\s*"\^\((.*?)\)\$"/);
+    while(matches) {
+        var groups = [];
+        var segments = matches[2].split('|');
+        segments.forEach(s => {
+          groups.push(matches[1]+' >= "'+s+'"');
+        })
+        str = str.replace(matches[0], '('+groups.join(' OR ')+')');
+        matches = str.match(/([\w_]+)\s*>=\s*"\^\((.*?)\)\$"/);
+    }
+
     return(str);
   }
 
