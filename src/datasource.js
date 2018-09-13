@@ -221,7 +221,7 @@ export class ThrukDatasource {
 
   _handleQueryError(err) {
     console.log(err);
-    if(err.data && err.data.code && err.data.code > 400) {
+    if(err.data && err.data.code && err.data.code >= 400) {
       var error = "query error: "+err.data.message;
       if(err.data.description) {
         error += " - "+err.data.description;
