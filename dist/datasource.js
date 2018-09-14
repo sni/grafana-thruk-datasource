@@ -55,13 +55,22 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
           key: 'testDatasource',
           value: function testDatasource() {
             var requestOptions = this._requestOptions({
-              url: this.url + '/r/v1/',
+              url: this.url + '/r/v1/thruk?columns=rest_version',
               method: 'GET'
             });
             return this.backendSrv.datasourceRequest(requestOptions).then(function (response) {
-              if (response.status === 200) {
+              if (response.status === 200 && response.data && response.data.rest_version === 1) {
                 return { status: "success", message: "Data source is working", title: "Success" };
               }
+              if (response.status === 200 && response.data && response.data.match(/login\.cgi/)) {
+                return { status: 'error', message: 'Data source connected, but no valid data received. Verify authorization.' };
+              }
+              return { status: 'error', message: response.status + " " + response.statusText };
+            }).catch(function (err) {
+              if (err.status && err.status >= 400) {
+                return { status: 'error', message: 'Data source not connected: ' + err.status + ' ' + err.statusText };
+              }
+              return { status: 'error', message: err.message };
             });
           }
         }, {
@@ -126,7 +135,7 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
               var params = {};
 
               if (!path) {
-                return This.$q.when([]);
+                return This.q.when([]);
               }
               path = path.replace(/^\//, '');
               path = this._replaceVariables(path, options.range, options.scopedVars);

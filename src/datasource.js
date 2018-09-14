@@ -15,14 +15,24 @@ export class ThrukDatasource {
   // testDatasource is used on the datasource options page
   testDatasource() {
     var requestOptions = this._requestOptions({
-      url: this.url + '/r/v1/',
+      url: this.url + '/r/v1/thruk?columns=rest_version',
       method: 'GET'
     });
     return this.backendSrv.datasourceRequest(requestOptions)
       .then(response => {
-        if (response.status === 200) {
+        if(response.status === 200 && response.data && response.data.rest_version === 1) {
           return { status: "success", message: "Data source is working", title: "Success" };
         }
+        if(response.status === 200 && response.data && response.data.match(/login\.cgi/)) {
+          return { status: 'error', message: 'Data source connected, but no valid data received. Verify authorization.' };
+        }
+        return { status: 'error', message: response.status+" "+response.statusText };
+      })
+      .catch(err => {
+        if(err.status && err.status >= 400) {
+          return { status: 'error', message: 'Data source not connected: '+err.status+' '+err.statusText };
+        }
+        return { status: 'error', message: err.message };
       });
   }
 
@@ -91,7 +101,7 @@ export class ThrukDatasource {
       var params = {};
 
       if(!path) {
-        return(This.$q.when([]));
+        return(This.q.when([]));
       }
       path = path.replace(/^\//, '');
       path = this._replaceVariables(path, options.range, options.scopedVars);
