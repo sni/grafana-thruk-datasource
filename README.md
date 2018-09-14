@@ -89,5 +89,5 @@ which is the same as
 
 #### Changelog
 
-1.0.0  2018-09-03
+1.0.0  2018-09-14
     - inital release
