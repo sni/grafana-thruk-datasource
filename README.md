@@ -89,7 +89,7 @@ which is the same as
 
 #### Changelog
 
-next:
+1.0.1  2018-09-30
     - fix annotation query parser
 
 1.0.0  2018-09-14
