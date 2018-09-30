@@ -89,5 +89,8 @@ which is the same as
 
 #### Changelog
 
+next:
+    - fix annotation query parser
+
 1.0.0  2018-09-14
     - inital release

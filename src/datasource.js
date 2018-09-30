@@ -40,7 +40,7 @@ export class ThrukDatasource {
   annotationQuery(options) {
     var query = this._parseQuery(this._replaceVariables(options.annotation.query, options.range, options.scopedVars));
     var path = query.table.replace(/^\//, '');
-    if(query.columns[0] != "time") {
+    if(query.columns.split(/\s*,\s*/)[0] != "time") {
       throw new Error("query syntax error, first column must be 'time' for annotations.");
     }
     var params = {
