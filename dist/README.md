@@ -41,6 +41,9 @@ Uses direct access. Thruk must be accessible from the public.
     - Access 'direct'
     - Http Auth 'With Credentials'
 
+### Metric Queries
+This datasource does not support metrics. Only table data format is available.
+
 ### Table Queries
 
 Using the table panel, you can display most data from the rest api. However
@@ -89,7 +92,7 @@ which is the same as
 
 #### Changelog
 
-next:
+1.0.1  2018-09-30
     - fix annotation query parser
 
 1.0.0  2018-09-14
