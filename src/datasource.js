@@ -158,7 +158,7 @@ export class ThrukDatasource {
   }
 
   _addColumn(table, col) {
-    if(col.match(/^(last_|next_|time)/)) {
+    if(col.match(/^(last_|next_|start_|end_|time)/)) {
       table.addColumn({ text: col, type: 'time' });
     } else {
       table.addColumn({ text: col });

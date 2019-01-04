@@ -92,6 +92,9 @@ which is the same as
 
 #### Changelog
 
+next:
+    - add more time styles
+
 1.0.1  2018-09-30
     - fix annotation query parser
 
