@@ -92,7 +92,7 @@ which is the same as
 
 #### Changelog
 
-next:
+1.0.2  2019-01-04
     - add more time styles
 
 1.0.1  2018-09-30
