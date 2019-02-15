@@ -93,21 +93,21 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
         }, {
           key: 'getColumns',
           value: function getColumns() {
+            var This = this;
             var requestOptions = this.datasource._requestOptions({
               url: this.datasource.url + '/r/v1/' + this.target.table + '?limit=1',
               method: 'GET',
               headers: { 'Content-Type': 'application/json' }
             });
             return this.datasource.backendSrv.datasourceRequest(requestOptions).then(function (result) {
-              var data = [];
-              data.push({ text: '-- remove --', value: '-- remove --' });
+              var data = [This.uiSegmentSrv.newOperator('-- remove --'), This.uiSegmentSrv.newOperator('avg()'), This.uiSegmentSrv.newOperator('min()'), This.uiSegmentSrv.newOperator('max()'), This.uiSegmentSrv.newOperator('sum()'), This.uiSegmentSrv.newOperator('count()')];
               if (result.data[0]) {
                 Object.keys(result.data[0]).forEach(function (key) {
-                  data.push({ text: key, value: key });
+                  data.push(This.uiSegmentSrv.newSegment({ text: key, value: key }));
                 });
               }
               return data;
-            }).then(this.uiSegmentSrv.transformToSegments(false)).catch(this.datasource._handleQueryError.bind(this));
+            }).catch(this.datasource._handleQueryError.bind(this));
           }
         }, {
           key: 'tagSegmentUpdated',
@@ -138,6 +138,10 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
             });
             if (this.colSegments.length == 0) {
               this.colSegments.push(this.uiSegmentSrv.newSegment({ value: '*' }));
+            } else {
+              if (this.colSegments[this.colSegments.length - 1].text && this.colSegments[this.colSegments.length - 1].text.match(/\(\)$/)) {
+                this.colSegments.push(this.uiSegmentSrv.newSegment({ value: ' ' }));
+              }
             }
             this.colSegments.push(this.uiSegmentSrv.newPlusButton());
           }

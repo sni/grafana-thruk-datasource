@@ -89,7 +89,7 @@ export class ThrukDatasource {
       .catch(this._handleQueryError.bind(this));
   }
 
-  // query gets called from table panels
+  // query gets called from table and singlestat panels
   query(options) {
     var This = this;
     // we can only handle a single query right now
@@ -111,9 +111,20 @@ export class ThrukDatasource {
         target.columns.shift();
       }
       if(target.columns.length > 0) {
-        params.columns = target.columns.join(',');
+        params.columns = [];
+        var op;
         target.columns.forEach(col => {
-          This._addColumn(table, col);
+          var matches = col.match(/^(.*)\(\)$/);
+          if(matches && matches[1]) {
+            op = matches[1];
+          } else {
+            if(op) {
+              col = op+'('+col+')';
+              op = undefined;
+            }
+            This._addColumn(table, col);
+            params.columns.push(col);
+          }
         });
         hasColumns = true;
       }
@@ -129,6 +140,9 @@ export class ThrukDatasource {
         params: params,
       });
       return This.backendSrv.datasourceRequest(requestOptions).then(function(result) {
+        if(!angular.isArray(result.data)) {
+          result.data = [result.data];
+        }
         // extract columns from first result row unless specified
         if(!hasColumns && result.data[0]) {
           Object.keys(result.data[0]).forEach(col => {

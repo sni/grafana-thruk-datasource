@@ -147,9 +147,20 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                 target.columns.shift();
               }
               if (target.columns.length > 0) {
-                params.columns = target.columns.join(',');
+                params.columns = [];
+                var op;
                 target.columns.forEach(function (col) {
-                  This._addColumn(table, col);
+                  var matches = col.match(/^(.*)\(\)$/);
+                  if (matches && matches[1]) {
+                    op = matches[1];
+                  } else {
+                    if (op) {
+                      col = op + '(' + col + ')';
+                      op = undefined;
+                    }
+                    This._addColumn(table, col);
+                    params.columns.push(col);
+                  }
                 });
                 hasColumns = true;
               }
@@ -165,6 +176,9 @@ System.register(['lodash', 'app/core/table_model'], function (_export, _context)
                 params: params
               });
               return This.backendSrv.datasourceRequest(requestOptions).then(function (result) {
+                if (!angular.isArray(result.data)) {
+                  result.data = [result.data];
+                }
                 // extract columns from first result row unless specified
                 if (!hasColumns && result.data[0]) {
                   Object.keys(result.data[0]).forEach(function (col) {

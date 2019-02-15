@@ -30,6 +30,7 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
   }
 
   getColumns() {
+    var This = this;
     var requestOptions = this.datasource._requestOptions({
       url: this.datasource.url + '/r/v1/'+this.target.table+'?limit=1',
       method: 'GET',
@@ -37,16 +38,21 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
     });
     return this.datasource.backendSrv.datasourceRequest(requestOptions)
       .then(function(result) {
-        var data = [];
-        data.push({ text: '-- remove --', value: '-- remove --' });
+        var data = [
+          This.uiSegmentSrv.newOperator('-- remove --'),
+          This.uiSegmentSrv.newOperator('avg()'),
+          This.uiSegmentSrv.newOperator('min()'),
+          This.uiSegmentSrv.newOperator('max()'),
+          This.uiSegmentSrv.newOperator('sum()'),
+          This.uiSegmentSrv.newOperator('count()'),
+        ];
         if(result.data[0]) {
           Object.keys(result.data[0]).forEach(function(key) {
-            data.push({ text: key, value: key });
+            data.push(This.uiSegmentSrv.newSegment({ text: key, value: key }));
           });
         }
         return(data);
       })
-      .then(this.uiSegmentSrv.transformToSegments(false))
       .catch(this.datasource._handleQueryError.bind(this));
   }
 
@@ -74,6 +80,10 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
     });
     if(this.colSegments.length == 0) {
       this.colSegments.push(this.uiSegmentSrv.newSegment({ value: '*' }));
+    } else {
+      if(this.colSegments[this.colSegments.length-1].text && this.colSegments[this.colSegments.length-1].text.match(/\(\)$/)) {
+        this.colSegments.push(this.uiSegmentSrv.newSegment({ value: ' ' }));
+      }
     }
     this.colSegments.push(this.uiSegmentSrv.newPlusButton());
   }

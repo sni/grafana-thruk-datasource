@@ -92,6 +92,10 @@ which is the same as
 
 #### Changelog
 
+next:
+    - support aggregation functions
+    - convert hash responses into tables
+
 1.0.2  2019-01-04
     - add more time styles
 
