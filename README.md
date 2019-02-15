@@ -69,6 +69,10 @@ It is important to append the time filter like in this example:
   SELECT time, message FROM logs WHERE host_name = 'test' and time = $time
 ```
 
+### Single Stat Queries
+Single stats are best used with REST endpoints which return aggregated values
+already or use aggregation functions like, `avg`, `sum`, `min`, `max` or `count`. 
+
 ### Using Variables
 
 Dashboard variables can be used in almost all queries. For example if you
