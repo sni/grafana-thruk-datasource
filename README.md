@@ -107,7 +107,7 @@ which is the same as
 
 #### Changelog
 
-next:
+1.0.3  2019-02-15
     - support aggregation functions
     - convert hash responses into tables
     - support timeseries based panels
