@@ -73,6 +73,17 @@ It is important to append the time filter like in this example:
 Single stats are best used with REST endpoints which return aggregated values
 already or use aggregation functions like, `avg`, `sum`, `min`, `max` or `count`. 
 
+### Timeseries based panels
+Althouth Thruk isn't a timeseries databases und usually only returns table
+data, some queries can be converted to fake timeseries if the panel cannot
+handle table data.
+
+For example the pie chart plugin can be used with stats queries like this:
+
+```
+  SELECT count() state, state FROM /hosts
+```
+
 ### Using Variables
 
 Dashboard variables can be used in almost all queries. For example if you
@@ -99,6 +110,7 @@ which is the same as
 next:
     - support aggregation functions
     - convert hash responses into tables
+    - support timeseries based panels
 
 1.0.2  2019-01-04
     - add more time styles

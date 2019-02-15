@@ -71,12 +71,20 @@ System.register(['app/plugins/sdk', './css/query-editor.css!'], function (_expor
           _this.target.table = _this.target.table || '/';
           _this.target.columns = _this.target.columns || ['*'];
           _this.target.condition = _this.target.condition || '';
+          _this.target.type = _this.target.type || 'table';
 
           _this.setColSegments();
           return _this;
         }
 
         _createClass(ThrukDatasourceQueryCtrl, [{
+          key: 'getTypes',
+          value: function getTypes() {
+            var This = this;
+            var data = [This.uiSegmentSrv.newSegment({ text: 'table', value: 'table' }), This.uiSegmentSrv.newSegment({ text: 'timeseries', value: 'timeseries' })];
+            return This.datasource.q.when(data);
+          }
+        }, {
           key: 'getTables',
           value: function getTables() {
             var requestOptions = this.datasource._requestOptions({

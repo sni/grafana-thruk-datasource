@@ -110,7 +110,14 @@ export class ThrukDatasource {
       if(target.columns[0] == '*') {
         target.columns.shift();
       }
+      var hasStats = false;
       if(target.columns.length > 0) {
+        target.columns.forEach(col => {
+          if(col.match(/^(.*)\(\)$/)) {
+            hasStats = true;
+            return false;
+          }
+        });
         params.columns = [];
         var op;
         target.columns.forEach(col => {
@@ -122,7 +129,9 @@ export class ThrukDatasource {
               col = op+'('+col+')';
               op = undefined;
             }
-            This._addColumn(table, col);
+            if(!hasStats) {
+              This._addColumn(table, col);
+            }
             params.columns.push(col);
           }
         });
@@ -144,7 +153,7 @@ export class ThrukDatasource {
           result.data = [result.data];
         }
         // extract columns from first result row unless specified
-        if(!hasColumns && result.data[0]) {
+        if((!hasColumns || hasStats) && result.data[0]) {
           Object.keys(result.data[0]).forEach(col => {
             This._addColumn(table, col);
           });
@@ -161,6 +170,9 @@ export class ThrukDatasource {
           });
           table.rows.push(row);
         });
+        if(target.type == "timeseries") {
+          return(This._fakeTimeseries(table, target, options, hasStats));
+        }
         return({
           data: [
             table
@@ -255,5 +267,63 @@ export class ThrukDatasource {
     }
     throw new Error(err);
     return [];
+  }
+
+  _fakeTimeseries(table, target, options, hasStats) {
+    var data = {data:[]};
+    var steps = 10;
+    var from  = options.range.from.unix();
+    var to    = options.range.to.unix();
+    var step  = Math.floor((to-from)/steps);
+
+    // create timeseries based on group by keys
+    if(table.rows.length > 1 || (hasStats && table.columnMap[":KEY"])) {
+      var keyIndex = 0;
+      var x = 0;
+      table.columns.forEach(col => {
+        if(col.text == ':KEY') {
+          keyIndex = x;
+          return false;
+        }
+        x++;
+      });
+      table.rows.forEach(row => {
+        var datapoints = [];
+        var alias      = row[keyIndex];
+        var val        = row[1];
+        if(row.length > 2) {
+          throw new Error("timeseries from grouped stats queries with more than 2 columns are not supported.");
+        }
+        for(var y = 0; y < steps; y++) {
+          datapoints.push([
+            val,
+            (from+(step*y))*1000
+          ]);
+        }
+        data.data.push({
+          "target": alias,
+          "datapoints": datapoints
+        });
+      });
+      return(data);
+    }
+
+    var x = 0;
+    table.columns.forEach(col => {
+      var datapoints = [];
+      var val = table.rows[0][x];
+      for(var y = 0; y < steps; y++) {
+        datapoints.push([
+          val,
+          (from+(step*y))*1000
+        ]);
+      }
+      data.data.push({
+        "target": col.text,
+        "datapoints": datapoints
+      });
+      x++;
+    });
+    return(data);
   }
 }

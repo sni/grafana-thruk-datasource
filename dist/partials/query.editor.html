@@ -33,6 +33,8 @@
       <label class="gf-form-label query-keyword width-7">LIMIT</label>
       <input type="text" class="gf-form-input width-9" ng-model="ctrl.target.limit" spellcheck='false' placeholder="No Limit" ng-blur="ctrl.onChangeInternal()">
     </div>
+    <label class="gf-form-label query-keyword width-7" style="text-align: right;">AS</label>
+    <metric-segment-model property="ctrl.target.type" get-options="ctrl.getTypes()" on-change="ctrl.onChangeInternal()"></metric-segment-model>
     <div class="gf-form gf-form--grow">
       <div class="gf-form-label gf-form-label--grow"></div>
     </div>

@@ -11,8 +11,18 @@ export class ThrukDatasourceQueryCtrl extends QueryCtrl {
     this.target.table     = this.target.table     || '/';
     this.target.columns   = this.target.columns   || ['*'];
     this.target.condition = this.target.condition || '';
+    this.target.type      = this.target.type      || 'table';
 
     this.setColSegments();
+  }
+
+  getTypes() {
+    var This = this;
+    var data = [
+      This.uiSegmentSrv.newSegment({text: 'table', value: 'table'}),
+      This.uiSegmentSrv.newSegment({text: 'timeseries', value: 'timeseries'})
+    ];
+    return This.datasource.q.when(data);
   }
 
   getTables() {
