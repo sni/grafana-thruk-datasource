@@ -137,7 +137,7 @@ How to create a new release:
 
 #### Changelog
 
-next:
+1.0.4  2020-06-29
     - fix export with "Export for sharing externally" enabled
 
 1.0.3  2019-02-15
