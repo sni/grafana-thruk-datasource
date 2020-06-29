@@ -71,7 +71,7 @@ It is important to append the time filter like in this example:
 
 ### Single Stat Queries
 Single stats are best used with REST endpoints which return aggregated values
-already or use aggregation functions like, `avg`, `sum`, `min`, `max` or `count`. 
+already or use aggregation functions like, `avg`, `sum`, `min`, `max` or `count`.
 
 ### Timeseries based panels
 Althouth Thruk isn't a timeseries databases und usually only returns table
@@ -103,6 +103,36 @@ which is the same as
 ```
   SELECT time, message FROM /alerts WHERE host_name = "$host" AND time = $time
 ```
+
+### Development
+
+To test and improve the plugin you can run Grafana instance in Docker using
+following command (in the source directory of this plugin):
+
+  docker run --rm -it -v $PWD:/var/lib/grafana/plugins/sni-thruk-datasource \
+           -p 3000:3000 --name grafana.docker \
+           --env=GF_USERS_DEFAULT_THEME=light \
+           grafana/grafana
+
+This will expose local plugin from your machine to Grafana container. Now
+run `grunt` to compile dist directory and start changes watcher:
+
+  grunt watch
+
+#### Create Release
+
+How to create a new release:
+(from https://grafana.com/tutorials/build-a-data-source-plugin/#9)
+
+    %> RELVERSION=0.0.1 && \
+          git checkout -b release-${RELVERSION} && \
+          grunt && \
+          git add -f dist && \
+          git commit -m "Release v${RELVERSION}" && \
+          git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}" && \
+          git push --set-upstream origin release-${RELVERSION} --follow-tags
+
+
 
 
 #### Changelog
