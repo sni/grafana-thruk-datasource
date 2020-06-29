@@ -137,6 +137,9 @@ How to create a new release:
 
 #### Changelog
 
+next:
+    - fix export with "Export for sharing externally" enabled
+
 1.0.3  2019-02-15
     - support aggregation functions
     - convert hash responses into tables

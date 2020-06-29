@@ -10,6 +10,8 @@ export class ThrukDatasource {
     this.url = instanceSettings.url;
     this.withCredentials = instanceSettings.withCredentials;
     this.basicAuth = instanceSettings.basicAuth;
+    this.name = instanceSettings.name;
+    this.id = instanceSettings.id;
   }
 
   // testDatasource is used on the datasource options page
