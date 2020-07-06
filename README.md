@@ -12,7 +12,7 @@ you use OMD-Labs, everything is setup already.
 Otherwise follow these steps:
 
     %> cd var/grafana/plugins
-    %> git clone https://github.com/sni/grafana-thruk-datasource.git
+    %> git clone -b release-1.0.4 https://github.com/sni/grafana-thruk-datasource.git
     %> restart grafana
 
 
