@@ -124,6 +124,7 @@ run `grunt` to compile dist directory and start changes watcher:
 How to create a new release:
 (from https://grafana.com/tutorials/build-a-data-source-plugin/#9)
 
+    %> vi src/plugin.json README.md
     %> RELVERSION=0.0.1 && \
           git checkout -b release-${RELVERSION} && \
           grunt && \
@@ -136,6 +137,9 @@ How to create a new release:
 
 
 #### Changelog
+
+1.0.5  2020-09-11
+    - improve packaging
 
 1.0.4  2020-06-29
     - fix export with "Export for sharing externally" enabled
