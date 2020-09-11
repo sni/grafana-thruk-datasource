@@ -1,0 +1,43 @@
+<query-editor-row query-ctrl="ctrl" can-collapse="true">
+  <div class="gf-form-inline">
+    <div class="gf-form">
+      <label class="gf-form-label query-keyword">SELECT</label>
+      <div class="gf-form" ng-repeat="segment in ctrl.colSegments">
+        <metric-segment segment="segment" get-options="ctrl.getColumns()" on-change="ctrl.tagSegmentUpdated(segment, $index)"></metric-segment>
+      </div>
+    </div>
+    <div class="gf-form gf-form--grow">
+      <div class="gf-form-label gf-form-label--grow"></div>
+    </div>
+  </div>
+
+  <div class="gf-form-inline">
+    <div class="gf-form">
+      <label class="gf-form-label query-keyword">FROM</label>
+      <metric-segment-model property="ctrl.target.table" get-options="ctrl.getTables()" on-change="ctrl.onChangeInternal()"></metric-segment-model>
+    </div>
+    <div class="gf-form gf-form--grow">
+      <div class="gf-form-label gf-form-label--grow"></div>
+    </div>
+  </div>
+
+  <div class="gf-form-inline">
+    <div class="gf-form gf-form--grow">
+      <label class="gf-form-label query-keyword">WHERE</label>
+      <input type="text" class="gf-form-input gf-form-label--grow" ng-model="ctrl.target.condition" spellcheck='false' placeholder="condition..., ex.: host_name = '$host' AND time = $time" ng-blur="ctrl.refresh()">
+    </div>
+  </div>
+
+  <div class="gf-form-inline">
+    <div class="gf-form">
+      <label class="gf-form-label query-keyword width-7">LIMIT</label>
+      <input type="text" class="gf-form-input width-9" ng-model="ctrl.target.limit" spellcheck='false' placeholder="No Limit" ng-blur="ctrl.onChangeInternal()">
+    </div>
+    <label class="gf-form-label query-keyword width-7" style="text-align: right;">AS</label>
+    <metric-segment-model property="ctrl.target.type" get-options="ctrl.getTypes()" on-change="ctrl.onChangeInternal()"></metric-segment-model>
+    <div class="gf-form gf-form--grow">
+      <div class="gf-form-label gf-form-label--grow"></div>
+    </div>
+</div>
+
+</query-editor-row>
