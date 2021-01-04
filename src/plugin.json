@@ -28,12 +28,12 @@
       {"name": "GitHub", "url": "https://github.com/sni/grafana-thruk-datasource"},
       {"name": "MIT License", "url": "https://github.com/sni/grafana-thruk-datasource/blob/master/LICENSE"}
     ],
-    "version": "1.0.5",
-    "updated": "2020-09-11"
+    "version": "%VERSION%",
+    "updated": "%TODAY%"
   },
 
   "dependencies": {
-    "grafanaVersion": "7.x.x",
+    "grafanaVersion": "7.0.x",
     "plugins": [ ]
   }
 }

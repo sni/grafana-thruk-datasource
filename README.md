@@ -4,7 +4,7 @@
 
 Search for `thruk` in the Grafana plugins directory or simply use the grafana-cli command:
 
-    grafana-cli plugins install sni-thruk-datasource
+    %> grafana-cli plugins install sni-thruk-datasource
 
 Also [OMD-Labs](https://labs.consol.de/omd/) comes with this datasource included, so if
 you use OMD-Labs, everything is setup already.
@@ -115,28 +115,25 @@ following command (in the source directory of this plugin):
            grafana/grafana
 
 This will expose local plugin from your machine to Grafana container. Now
-run `grunt` to compile dist directory and start changes watcher:
+run `make buildwatch` to compile dist directory and start changes watcher:
 
-  grunt watch
+  %> make buildwatch
+
 
 #### Create Release
 
 How to create a new release:
-(from https://grafana.com/tutorials/build-a-data-source-plugin/#9)
 
-    %> vi src/plugin.json README.md
-    %> RELVERSION=0.0.1 && \
-          git checkout -b release-${RELVERSION} && \
-          grunt && \
-          git add -f dist && \
-          git commit -m "Release v${RELVERSION}" && \
-          git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}" && \
-          git push --set-upstream origin release-${RELVERSION} --follow-tags
+    %> export RELVERSION=1.0.5
+    %> export GRAFANA_API_KEY=...
+    %> vi README.md # add changelog entry
+    %> git commit -am "Release v${RELVERSION}"
+    %> git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}"
+    %> make GRAFANA_API_KEY=${GRAFANA_API_KEY} clean releasebuild
+    %> make releasepush
 
 
-
-
-#### Changelog
+### Changelog
 
 1.0.5  2020-09-11
     - improve packaging
