@@ -15,6 +15,7 @@ Otherwise follow these steps:
     %> git clone -b release-1.0.4 https://github.com/sni/grafana-thruk-datasource.git
     %> restart grafana
 
+Replace `release-1.0.4` with the last available release branch.
 
 ### Create Datasource
 
@@ -124,7 +125,7 @@ run `make buildwatch` to compile dist directory and start changes watcher:
 
 How to create a new release:
 
-    %> export RELVERSION=1.0.5
+    %> export RELVERSION=1.0.6
     %> export GRAFANA_API_KEY=...
     %> vi README.md # add changelog entry
     %> git commit -am "Release v${RELVERSION}"
@@ -134,6 +135,10 @@ How to create a new release:
 
 
 ### Changelog
+
+1.0.6  2021-01-04
+    - sign plugin
+    - switch package builds to yarn
 
 1.0.5  2020-09-11
     - improve packaging
