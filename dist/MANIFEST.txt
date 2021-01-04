@@ -1,0 +1,36 @@
+
+-----BEGIN PGP SIGNED MESSAGE-----
+Hash: SHA512
+
+{
+  "manifestVersion": "2.0.0",
+  "signatureType": "community",
+  "signedByOrg": "sni",
+  "signedByOrgName": "sni",
+  "plugin": "sni-thruk-datasource",
+  "version": "1.0.3",
+  "time": 1609764369267,
+  "keyId": "7e4d0c6a708866e7",
+  "files": {
+    "module.js": "ee3256ff74101ec6ef8ef33bb2a79f8ebe111a330596c922fbcf8d54782e776e",
+    "module.js.map": "fe4aae8da03bb964c79634824fe51d327947ee9bc7aa9d741d98e31501db0a1f",
+    "README.md": "497f5d12ab41ca2e1879af7ba31b1cea11511bc074a6a00a81f18fa5bf97c538",
+    "plugin.json": "cc13751de59f84aa3b1260eae48ed83968b9c8c6a1e9a5bcb8c58cd4a851b945",
+    "LICENSE": "4c0c48c17cc6a901f226369370fddada296d867a55e8cd669de49603f8c04376",
+    "partials/config.html": "687bbc0d3c72b3f6b3f93cafae6cd5bac2092d59b7e28c64d004ad1c0b11a481",
+    "partials/query.editor.html": "583baa2f378bc490cc5f4af600774eddf3c551fb67886e05f08f82b7fc5fd87c",
+    "partials/query.options.html": "01570a3c97a66d192bf4986355a52b92b3ff5b45fe528d9e5849464e8b4e213d",
+    "partials/annotations.editor.html": "83039b3cea47d76ffe2f3d3d89d4beb12ed363f8a20565bcf62b811ecd990ed9",
+    "img/logo.svg": "540e0077d856d192bf48e71b42703f42dd2bd1abd3f547ff23a822a34bb77191"
+  }
+}
+-----BEGIN PGP SIGNATURE-----
+Version: OpenPGP.js v4.10.1
+Comment: https://openpgpjs.org
+
+wqIEARMKAAYFAl/zDhEACgkQfk0ManCIZueMZAIJAYV0i6q74t2F5Yk/7Y+T
+Wzktne7dwHqKT44/iwcInTZWTHDNKscTVz78GmufxQUaSbxaRCxsh88mbmQK
+1zDDXH6qAgkBvKEC/urCEsYnx8uBgjxHuL2noXXVlY7uCZysfeAbE2xwqKMm
+4Zgn8fohQKJcLwcJeZpHzMlhullv8QsVKEONezE=
+=Op65
+-----END PGP SIGNATURE-----
