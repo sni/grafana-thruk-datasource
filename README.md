@@ -110,52 +110,29 @@ which is the same as
 To test and improve the plugin you can run Grafana instance in Docker using
 following command (in the source directory of this plugin):
 
-  docker run --rm -it -v $PWD:/var/lib/grafana/plugins/sni-thruk-datasource \
-           -p 3000:3000 --name grafana.docker \
-           --env=GF_USERS_DEFAULT_THEME=light \
-           grafana/grafana
+  %> make grafanadev
 
 This will expose local plugin from your machine to Grafana container. Now
 run `make buildwatch` to compile dist directory and start changes watcher:
 
   %> make buildwatch
 
-
 #### Create Release
 
 How to create a new release:
 
-    %> export RELVERSION=1.0.6
+    %> export RELVERSION=1.0.7
     %> export GRAFANA_API_KEY=...
-    %> vi README.md # add changelog entry
+    %> vi package.json # replace version
+    %> vi CHANGELOG.md # add changelog entry
     %> git commit -am "Release v${RELVERSION}"
     %> git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}"
     %> make GRAFANA_API_KEY=${GRAFANA_API_KEY} clean releasebuild
-    %> make releasepush
+    # upload zip somewhere and validate on https://plugin-validator.grafana.net/
+    # create release here https://github.com/sni/grafana-thruk-datasource/releases/new
+    # submit plugin update here https://grafana.com/orgs/sni/plugins
 
 
 ### Changelog
 
-1.0.6  2021-01-04
-    - sign plugin
-    - switch package builds to yarn
-
-1.0.5  2020-09-11
-    - improve packaging
-
-1.0.4  2020-06-29
-    - fix export with "Export for sharing externally" enabled
-
-1.0.3  2019-02-15
-    - support aggregation functions
-    - convert hash responses into tables
-    - support timeseries based panels
-
-1.0.2  2019-01-04
-    - add more time styles
-
-1.0.1  2018-09-30
-    - fix annotation query parser
-
-1.0.0  2018-09-14
-    - inital release
+see CHANGELOG.md

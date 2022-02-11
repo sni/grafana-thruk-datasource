@@ -6,5 +6,5 @@
     "jsx": "react"
   },
   "extends": "@grafana/toolkit/src/config/tsconfig.plugin.json",
-  "include": ["src", "types"]
+  "include": ["src"]
 }
