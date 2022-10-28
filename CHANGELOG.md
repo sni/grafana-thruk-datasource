@@ -1,5 +1,11 @@
 ### Changelog
 
+2.0.0  2022-10-28
+    - rebuild with react for grafana 9
+    - add support for logs explorer
+    - query editor:
+        - support sorting columns
+
 1.0.7  2022-02-11
     - rebuild for grafana 8
     - update dependencies

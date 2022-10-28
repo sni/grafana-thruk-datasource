@@ -2,33 +2,33 @@
   "name": "grafana-thruk-datasource",
   "version": "1.0.7",
   "description": "grafana thruk datasource",
-  "main": "index.js",
-  "scripts": {
-    "build": "grafana-toolkit plugin:build",
-    "test": "grafana-toolkit plugin:test",
-    "dev": "grafana-toolkit plugin:dev",
-    "watch": "grafana-toolkit plugin:dev --watch",
-    "prettier:check": "prettier --list-different \"**/*.{ts,tsx,scss}\"",
-    "prettier:write": "prettier --list-different \"**/*.{ts,tsx,scss}\" --write"
+  "author": "Sven Nierlein",
+  "license": "MIT",
+  "homepage": "https://github.com/sni/grafana-thruk-datasource#readme",
+  "bugs": {
+    "url": "https://github.com/sni/grafana-thruk-datasource/issues"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/sni/grafana-thruk-datasource.git"
   },
-  "author": "Sven Nierlein",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/sni/grafana-thruk-datasource/issues"
+  "scripts": {
+    "build": "grafana-toolkit plugin:build",
+    "test": "grafana-toolkit plugin:test",
+    "dev": "grafana-toolkit plugin:dev",
+    "watch": "grafana-toolkit plugin:dev --watch",
+    "sign": "grafana-toolkit plugin:sign",
+    "start": "yarn watch",
+    "prettier:check": "prettier --list-different \"**/*.{ts,tsx,scss}\"",
+    "prettier:write": "prettier --list-different \"**/*.{ts,tsx,scss}\" --write"
   },
   "devDependencies": {
-    "@grafana/data": ">=8.0.0",
-    "@grafana/runtime": ">=8.0.0",
-    "@grafana/toolkit": ">=8.0.0",
-    "@grafana/ui": ">=8.0.0",
-    "@types/lodash": ">=4.0.0"
+    "@grafana/data": "latest",
+    "@grafana/runtime": "latest",
+    "@grafana/toolkit": "latest",
+    "@grafana/ui": "latest",
+    "@types/lodash": "latest",
+    "@types/react-beautiful-dnd": "latest"
   },
-  "dependencies": {
-    "lodash": ">=4.0.0"
-  },
-  "homepage": "https://github.com/sni/grafana-thruk-datasource#readme"
+  "dependencies": {}
 }

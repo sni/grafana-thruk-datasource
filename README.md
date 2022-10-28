@@ -1,5 +1,9 @@
 ## Thruk Grafana Datasource - a Grafana backend datasource using Thruks REST API
 
+
+![Thruk Grafana Datasource](src/img/screenshot.png "Thruk Grafana Datasource")
+
+
 ### Installation
 
 Search for `thruk` in the Grafana plugins directory or simply use the grafana-cli command:
@@ -19,36 +23,20 @@ Replace `release-1.0.4` with the last available release branch.
 
 ### Create Datasource
 
-Direct access and proxy datasources are possible.
 Add a new datasource and select:
 
-Variant A:
-
-Uses the Grafana proxy. Must have a local user which is used for all queries.
+Use the Grafana proxy.
 
     - Type 'Thruk'
-    - Url 'https://localhost/sitename/thruk'
-    - Access 'proxy'
-    - Basic Auth 'True'
-    - User + Password for local thruk user
-
-
-Variant B:
-
-Uses direct access. Thruk must be accessible from the public.
-
-    - Type 'Thruk'
-    - Url 'https://yourhost/sitename/thruk' (Note: this has to be the absolute url)
-    - Access 'direct'
-    - Http Auth 'With Credentials'
-
-### Metric Queries
-This datasource does not support metrics. Only table data format is available.
+    - Url to Thruk, ex.: 'https://localhost/sitename/thruk'
 
 ### Table Queries
-
 Using the table panel, you can display most data from the rest api. However
-only text and numbers can be displayed in a sane way.
+only text, numbers and timestamps can be displayed in a sane way. Support for nested
+data structures is limited.
+
+Select the rest path from where you want to display data. Then choose all columns. Aggregation
+functions can be added as well and always affect the column following afterwards.
 
 ### Variable Queries
 
@@ -64,11 +52,9 @@ hosts of a certain hostgroup, use this example query:
 Annotation queries can be used to add logfile entries into your graphs.
 Please note that annotations are shared across all graphs in a dashboard.
 
-It is important to append the time filter like in this example:
+It is important to use at least a time filter.
 
-```
-  SELECT time, message FROM logs WHERE host_name = 'test' and time = $time
-```
+![Annotations](src/img/annotations.png "Annotations Editor")
 
 ### Single Stat Queries
 Single stats are best used with REST endpoints which return aggregated values
@@ -79,11 +65,29 @@ Althouth Thruk isn't a timeseries databases und usually only returns table
 data, some queries can be converted to fake timeseries if the panel cannot
 handle table data.
 
+You can either use queries which have 2 columns (name, value) or queries
+which only return a single result row with numeric values only.
+
+#### Statistic Data Pie Chart
+
 For example the pie chart plugin can be used with stats queries like this:
 
 ```
   SELECT count() state, state FROM /hosts
 ```
+
+The query is expected to fetch 2 columns. The first is the value, the second is the name.
+
+
+#### Single Host Pie Chart
+
+Ex.: Use statistics data for a single host to put it into a pie chart:
+
+```
+  SELECT num_services_ok, num_services_warn, num_services_crit, num_services_unknown FROM /hosts WHERE name = '$name' LIMIT 1
+```
+
+![Pie Chart](src/img/piechart.png "Pie Chart")
 
 ### Using Variables
 
@@ -105,6 +109,8 @@ which is the same as
   SELECT time, message FROM /alerts WHERE host_name = "$host" AND time = $time
 ```
 
+![Variables](src/img/variables.png "Variables Editor")
+
 ### Development
 
 To test and improve the plugin you can run Grafana instance in Docker using
@@ -116,6 +122,13 @@ This will expose local plugin from your machine to Grafana container. Now
 run `make buildwatch` to compile dist directory and start changes watcher:
 
   %> make buildwatch
+
+#### Testing
+
+For testing you can use the demo Thruk instance at:
+
+    - URL: https://demo.thruk.org/demo/thruk/
+    - Basic Auth: test / test
 
 #### Create Release
 

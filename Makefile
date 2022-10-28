@@ -5,24 +5,33 @@ DOCKER=docker run \
 		--rm \
 		-v $(shell pwd):/src \
 		-w "/src" \
-		-u $(shell id -u) \
-		-e NODE_OPTIONS"=--openssl-legacy-provider" \
+		-u $(shell id -u):$(shell id -g) \
+		-e "HOME=/src" \
 		-e "GRAFANA_API_KEY=$(GRAFANA_API_KEY)"
+NODEVERSION=16
+export NODE_PATH=$(shell pwd)/node_modules
+YARN=yarn
 
 build:
-	$(DOCKER)    --name $(PLUGINNAME)-build        node:latest bash -c "yarn install && yarn run build"
+	$(DOCKER)    --name $(PLUGINNAME)-build        node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) run build"
 
 buildwatch:
-	$(DOCKER) -i --name $(PLUGINNAME)-buildwatch   node:latest bash -c "yarn install && yarn run watch"
+	$(DOCKER) -i --name $(PLUGINNAME)-buildwatch   node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) run watch"
 
 buildupgrade:
-	$(DOCKER)    --name $(PLUGINNAME)-buildupgrade node:latest bash -c "yarn install && yarn upgrade"
+	$(DOCKER)    --name $(PLUGINNAME)-buildupgrade node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) upgrade"
 
 buildsign:
-	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:latest npx --legacy-peer-deps @grafana/toolkit plugin:sign
+	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) npx --legacy-peer-deps @grafana/toolkit plugin:sign
+
+prettier:
+	$(DOCKER)    --name $(PLUGINNAME)-buildpret    node:$(NODEVERSION) npx prettier --write --ignore-unknown src/
+
+prettiercheck:
+	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) npx prettier --check --ignore-unknown src/
 
 buildshell:
-	$(DOCKER) -i --name $(PLUGINNAME)-buildshell   node:latest bash
+	$(DOCKER) -i --name $(PLUGINNAME)-buildshell   node:$(NODEVERSION) bash
 
 grafanadev:
 	docker run --rm -it -v $(shell pwd)/dist:/var/lib/grafana/plugins/$(PLUGINNAME) \
@@ -31,8 +40,13 @@ grafanadev:
 		-e "GF_USERS_DEFAULT_THEME=light" \
 		grafana/grafana
 
+test: build prettiercheck
+
 clean:
 	rm -rf dist
+	rm -rf node_modules
+	rm -rf .yarnrc
+	rm -rf .npm
 
 releasebuild:
 	@if [ "x$(TAGVERSION)" = "x" ]; then echo "ERROR: must be on a git tag, got: $(shell git describe --tag --dirty)"; exit 1; fi

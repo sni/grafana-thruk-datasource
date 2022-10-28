@@ -1,10 +1,8 @@
 {
+  "$schema": "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json",
   "name": "Thruk",
   "id": "sni-thruk-datasource",
   "type": "datasource",
-
-  "includes": [
-  ],
 
   "metrics": true,
   "annotations": true,
@@ -21,21 +19,17 @@
       "large": "img/logo.svg"
     },
     "links": [
-      {"name": "GitHub", "url": "https://github.com/sni/grafana-thruk-datasource"},
-      {"name": "MIT License", "url": "https://github.com/sni/grafana-thruk-datasource/blob/master/LICENSE"}
+      { "name": "GitHub", "url": "https://github.com/sni/grafana-thruk-datasource" },
+      { "name": "MIT License", "url": "https://github.com/sni/grafana-thruk-datasource/blob/master/LICENSE" }
     ],
-    "keywords": [
-      "naemon", "nagios", "thruk"
-    ],
-    "screenshots": [
-      {"name": "thruk-datasource query editor", "path": "img/screenshot.png"}
-    ],
+    "keywords": ["naemon", "nagios", "thruk"],
+    "screenshots": [{ "name": "thruk-datasource query editor", "path": "img/screenshot.png" }],
     "version": "%VERSION%",
     "updated": "%TODAY%"
   },
 
   "dependencies": {
-    "grafanaDependency": ">=8.0.0",
-    "plugins": [ ]
+    "grafanaDependency": ">=9.0.0",
+    "plugins": []
   }
 }
