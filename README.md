@@ -1,7 +1,7 @@
 ## Thruk Grafana Datasource - a Grafana backend datasource using Thruks REST API
 
 
-![Thruk Grafana Datasource](src/img/screenshot.png "Thruk Grafana Datasource")
+![Thruk Grafana Datasource](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/src/img/screenshot.png "Thruk Grafana Datasource")
 
 
 ### Installation
@@ -54,7 +54,7 @@ Please note that annotations are shared across all graphs in a dashboard.
 
 It is important to use at least a time filter.
 
-![Annotations](src/img/annotations.png "Annotations Editor")
+![Annotations](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/src/img/annotations.png "Annotations Editor")
 
 ### Single Stat Queries
 Single stats are best used with REST endpoints which return aggregated values
@@ -87,7 +87,7 @@ Ex.: Use statistics data for a single host to put it into a pie chart:
   SELECT num_services_ok, num_services_warn, num_services_crit, num_services_unknown FROM /hosts WHERE name = '$name' LIMIT 1
 ```
 
-![Pie Chart](src/img/piechart.png "Pie Chart")
+![Pie Chart](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/src/img/piechart.png "Pie Chart")
 
 ### Using Variables
 
@@ -109,7 +109,7 @@ which is the same as
   SELECT time, message FROM /alerts WHERE host_name = "$host" AND time = $time
 ```
 
-![Variables](src/img/variables.png "Variables Editor")
+![Variables](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/src/img/variables.png "Variables Editor")
 
 ### Development
 
