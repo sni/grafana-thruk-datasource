@@ -1447,14 +1447,14 @@
     typescript "4.6.4"
 
 "@grafana/runtime@latest":
-  version "9.2.2"
-  resolved "https://registry.npmjs.org/@grafana/runtime/-/runtime-9.2.2.tgz"
-  integrity sha512-vjhdGgRl6GE3l7zwUjcnbXwuHdrpZ9PZv3Y5nPhkP+qBhdP+vwbFO743CTAgclJ1e7bdUYHq+Ojm2Z5S94Y1Nw==
+  version "9.2.3"
+  resolved "https://registry.yarnpkg.com/@grafana/runtime/-/runtime-9.2.3.tgz#c6c0bdb9d18c8d62c5f70b01fe5724512aa7431e"
+  integrity sha512-i9BpSBbSEn/Piu/4Huf5IQbD0J1LPdyTsJZtOvokgMXJ3Jca0TGJPUFPra7DFhoviPkBRnrZb+l+KkNP7p2Igw==
   dependencies:
     "@grafana/agent-web" "^0.4.0"
-    "@grafana/data" "9.2.2"
-    "@grafana/e2e-selectors" "9.2.2"
-    "@grafana/ui" "9.2.2"
+    "@grafana/data" "9.2.3"
+    "@grafana/e2e-selectors" "9.2.3"
+    "@grafana/ui" "9.2.3"
     "@sentry/browser" "6.19.7"
     history "4.10.1"
     lodash "4.17.21"
@@ -1639,7 +1639,7 @@
     uplot "1.6.22"
     uuid "8.3.2"
 
-"@grafana/ui@latest":
+"@grafana/ui@9.2.3", "@grafana/ui@latest":
   version "9.2.3"
   resolved "https://registry.yarnpkg.com/@grafana/ui/-/ui-9.2.3.tgz#b7b957a118fa8a1382cab4ec5f5dcc3b7b64d9d1"
   integrity sha512-0XmjDqV4wieD17EsJE8n+EGEsMKo2NxPqcib8AfqC7o5xtWMdYnWwDPcs1h9y5K5pA9ulBcCfrHlUYo4LbhSZQ==
