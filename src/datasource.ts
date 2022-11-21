@@ -71,7 +71,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       query.table +
         '?q=' +
         encodeURIComponent(query.condition) +
-        '&column=' +
+        '&columns=' +
         encodeURIComponent(query.columns.join(',')) +
         '&limit=' +
         encodeURIComponent(query.limit > 0 ? query.limit : '')
