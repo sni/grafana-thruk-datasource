@@ -1,5 +1,8 @@
 ### Changelog
 
+2.0.1  2022-12-02
+    - fix syntax error in variables query
+
 2.0.0  2022-10-28
     - rebuild with react for grafana 9
     - add support for logs explorer
