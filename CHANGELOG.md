@@ -1,5 +1,8 @@
 ### Changelog
 
+2.0.2  2023-05-30
+    - fix using variables in path/from field
+
 2.0.1  2022-12-02
     - fix syntax error in variables query
 

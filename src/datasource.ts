@@ -91,7 +91,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     // set defaults and replace template variables
     options.targets.map((target) => {
       target = defaults(target, defaultQuery);
-      target.table = this._fixup_regex(templateSrv.replace(target.table));
+      target.table = this.replaceVariables(target.table, undefined, options.scopedVars);
       target.limit = Number(templateSrv.replace(String(target.limit || '')));
     });
 
