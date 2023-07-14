@@ -100,8 +100,26 @@ export const QueryEditor = (props: Props) => {
     background: isDragging ? 'lightgreen' : '',
     ...draggableStyle,
   });
+  const css = `
+  .thruk-dnd-label {
+    padding: 0 12px;
+    cursor: grab;
+  }
+  .thruk-dnd-label:hover {
+    background: lightblue;
+    cursor: grab;
+  }
+  .thruk-dnd-label LABEL {
+    padding: 0 4px;
+    margin: 0;
+    cursor: text;
+  }
+  `;
   return (
     <>
+      <style>
+        {css}
+      </style>
       <div className="gf-form">
         <SegmentSection label="FROM">
           <></>
@@ -136,7 +154,7 @@ export const QueryEditor = (props: Props) => {
                         {...provided.dragHandleProps}
                         style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                       >
-                        <InlineLabel width={'auto'}>
+                        <InlineLabel width={'auto'} className='thruk-dnd-label'>
                           <SegmentAsync
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}

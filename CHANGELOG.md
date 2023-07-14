@@ -1,5 +1,9 @@
 ### Changelog
 
+next:
+    - make drag/drop more obvious
+    - fix removing * from column list
+
 2.0.2  2023-05-30
     - fix using variables in path/from field
 
