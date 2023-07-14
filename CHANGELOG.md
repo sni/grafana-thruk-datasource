@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.0.3  2023-07-14
     - make drag/drop more obvious
     - set correct field type for numeric columns
     - fix removing * from column list
