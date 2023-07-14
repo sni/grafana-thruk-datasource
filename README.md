@@ -141,7 +141,6 @@ How to create a new release:
     %> git commit -am "Release v${RELVERSION}"
     %> git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}"
     %> make GRAFANA_API_KEY=${GRAFANA_API_KEY} clean releasebuild
-    # upload zip somewhere and validate on https://plugin-validator.grafana.net/
     # create release here https://github.com/sni/grafana-thruk-datasource/releases/new
     # submit plugin update here https://grafana.com/orgs/sni/plugins
 
