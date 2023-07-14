@@ -2,6 +2,7 @@
 
 next:
     - make drag/drop more obvious
+    - set correct field type for numeric columns
     - fix removing * from column list
 
 2.0.2  2023-05-30
