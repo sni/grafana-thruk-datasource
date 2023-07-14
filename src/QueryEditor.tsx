@@ -179,6 +179,11 @@ export const QueryEditor = (props: Props) => {
           }}
           onChange={(v) => {
             props.query.columns.push(v.value);
+            // remove '*' from list
+            let i = props.query.columns.indexOf('*');
+            if (i !== -1) {
+              props.query.columns.splice(i, 1);
+            }
             props.onChange(props.query);
             debouncedRunQuery();
           }}
