@@ -117,9 +117,7 @@ export const QueryEditor = (props: Props) => {
   `;
   return (
     <>
-      <style>
-        {css}
-      </style>
+      <style>{css}</style>
       <div className="gf-form">
         <SegmentSection label="FROM">
           <></>
@@ -154,7 +152,7 @@ export const QueryEditor = (props: Props) => {
                         {...provided.dragHandleProps}
                         style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                       >
-                        <InlineLabel width={'auto'} className='thruk-dnd-label'>
+                        <InlineLabel width={'auto'} className="thruk-dnd-label">
                           <SegmentAsync
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}

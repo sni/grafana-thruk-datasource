@@ -163,7 +163,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       // adjust number / time field types
       if (target.result && target.result.data && target.result.data.length > 0) {
         fields.forEach((field: FieldSchema, i: number) => {
-          if(fields[i].type !== FieldType.string) {
+          if (fields[i].type !== FieldType.string) {
             return true;
           }
           if (isNumber(target.result.data[0][field.name])) {
