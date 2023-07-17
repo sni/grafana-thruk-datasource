@@ -111,17 +111,21 @@ which is the same as
 
 ![Variables](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/src/img/variables.png "Variables Editor")
 
+
 ### Development
 
 To test and improve the plugin you can run Grafana instance in Docker using
 following command (in the source directory of this plugin):
 
-  %> make grafanadev
+  %> make dev
 
-This will expose local plugin from your machine to Grafana container. Now
-run `make buildwatch` to compile dist directory and start changes watcher:
+This will start a grafana container and a build watcher which updates the
+plugin is the dist/ folder.
 
-  %> make buildwatch
+The dev instance can be accessed at http://localhost:3000
+
+You need to add the datasource manually.
+
 
 #### Testing
 
