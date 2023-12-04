@@ -1,7 +1,8 @@
 ### Changelog
 
-next:
+2.0.4  2023-12-04
     - remove time filter restriction
+    - update grafana toolkit to 10.1.5
 
 2.0.3  2023-07-14
     - make drag/drop more obvious

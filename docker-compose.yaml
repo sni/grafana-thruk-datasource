@@ -7,7 +7,7 @@ services:
       context: ./.config
       args:
         grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
-        grafana_version: ${GRAFANA_VERSION:-9.5.3}
+        grafana_version: ${GRAFANA_VERSION:-10.2.2}
     ports:
       - 3000:3000/tcp
     volumes:
@@ -16,7 +16,7 @@ services:
     environment:
       - GF_USERS_DEFAULT_THEME=light
   buildwatch:
-    image: node:16
+    image: node:20
     command: bash -c "yarn install && yarn run dev"
     working_dir: /src
     volumes:
