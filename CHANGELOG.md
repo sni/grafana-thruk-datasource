@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - remove time filter restriction
+
 2.0.3  2023-07-14
     - make drag/drop more obvious
     - set correct field type for numeric columns

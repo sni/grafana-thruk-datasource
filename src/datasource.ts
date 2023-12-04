@@ -108,10 +108,6 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     options.targets.map((target) => {
       let col = this._buildColumns(target.columns);
 
-      if (this.isLogs(target.table) && !target.condition.match(/\$time/)) {
-        throw new Error('logs query must contain time filter, ex.: time = $time');
-      }
-
       let path = target.table;
       path = path.replace(/^\//, '');
       path = this.replaceVariables(path, options.range, options.scopedVars);
@@ -500,12 +496,5 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       }
       response.push(frame);
     });
-  }
-
-  isLogs(table: string): boolean {
-    if (table.match(/(logs|notifications|alerts)/)) {
-      return true;
-    }
-    return false;
   }
 }
