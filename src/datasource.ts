@@ -122,7 +122,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           path + '&q=' + encodeURIComponent(this.replaceVariables(target.condition, options.range, options.scopedVars));
       }
 
-      queries.push(this.request('GET', path, null, {"X-THRUK-OutputFormat": "wrapped_json"}));
+      queries.push(this.request('GET', path, null, { 'X-THRUK-OutputFormat': 'wrapped_json' }));
       columns.push(col);
     });
 
@@ -147,16 +147,16 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       let meta = undefined;
       let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
       if (!Array.isArray(target.result.data)) {
-        if(target.result.data.data && target.result.data.meta) {
+        if (target.result.data.data && target.result.data.meta) {
           meta = target.result.data.meta;
           target.result.data = target.result.data.data;
         }
         target.result.data = [target.result.data];
       }
-      if(meta) {
-        meta.columns.forEach((column: ThrukColumnMetaColumn, i:number) => {
+      if (meta) {
+        meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
           metaColumns[column.name] = column;
-        })
+        });
       }
       let fields = columns[i].fields;
       if (!columns[i].hasColumns) {
@@ -222,17 +222,17 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
    * @param {FieldType} [type] - The type of the field. If not provided, it will be inferred based on the key.
    * @return {FieldSchema} The built FieldSchema object.
    */
-  buildField(key: string, type?: FieldType|string, config?: FieldConfig): FieldSchema {
+  buildField(key: string, type?: FieldType | string, config?: FieldConfig): FieldSchema {
     if (type !== undefined) {
       let ftype = FieldType.string;
-      if(typeof(type) === 'string') {
-        ftype = this.str2fieldtype(type)
+      if (typeof type === 'string') {
+        ftype = this.str2fieldtype(type);
       }
-      return { name: key, type: ftype, config:config };
+      return { name: key, type: ftype, config: config };
     }
     // seconds (from availabilty checks)
     if (key.match(/time_(down|up|unreachable|indeterminate|ok|warn|unknown|critical)/)) {
-      return { name: key, type: FieldType.number, config: { unit: "s" } };
+      return { name: key, type: FieldType.number, config: { unit: 's' } };
     }
     // timestamp fields
     if (key.match(/^(last_|next_|start_|end_|time)/)) {
@@ -241,14 +241,14 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     return { name: key, type: FieldType.string };
   }
 
-  str2fieldtype(str: string): FieldType  {
-    switch(str) {
-      case "number":
+  str2fieldtype(str: string): FieldType {
+    switch (str) {
+      case 'number':
         return FieldType.number;
-      case "time":
+      case 'time':
         return FieldType.time;
-      case "bool":
-      case "boolean":
+      case 'bool':
+      case 'boolean':
         return FieldType.boolean;
     }
     return FieldType.string;
