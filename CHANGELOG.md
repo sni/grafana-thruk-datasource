@@ -1,5 +1,9 @@
 ### Changelog
 
+next:
+    - add support for column field config as part of the query result
+    - make from field in the queryeditor editable
+
 2.0.4  2023-12-04
     - remove time filter restriction
     - update grafana toolkit to 10.1.5
