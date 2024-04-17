@@ -115,7 +115,7 @@ export const QueryEditor = (props: Props) => {
     cursor: text;
   }
   `;
-  var fromInput :HTMLInputElement;
+  let fromInput: HTMLInputElement;
   // set current value so it can be changed instead of typing it again
   const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
     if(inp) {
@@ -123,8 +123,14 @@ export const QueryEditor = (props: Props) => {
     } else {
       inp = fromInput;
     }
+    if(!inp) {
+      return;
+    }
     inp.value = value;
     setTimeout(() => {
+      if(!inp) {
+        return;
+      }
       inp.value = props.query.table;
       inp.style.minWidth = inp.parentElement?.offsetWidth+"px";
       // clear placeholder watermark, it overlaps current text
@@ -146,7 +152,7 @@ export const QueryEditor = (props: Props) => {
             makeInputEditable(props.query.table, e.target as HTMLInputElement)
           }}
           value={toSelectableValue(props.query.table || '/')}
-          loadOptions={(filter?: string) : Promise<SelectableValue[]> => {
+          loadOptions={(filter?: string): Promise<SelectableValue[]> => {
               // set current value so it can be changed instead of typing it again
               return loadTables(filter).then((data) => {
                 makeInputEditable(props.query.table)
