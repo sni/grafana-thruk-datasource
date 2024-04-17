@@ -18,7 +18,7 @@ export const QueryEditor = (props: Props) => {
   const debouncedRunQuery = useMemo(() => debounce(onRunQuery, 500), [onRunQuery]);
   props.query = defaults(props.query, defaultQuery);
 
-  const prependDasboardVariables = (data: SelectableValue[]) => {
+  const prependDashboardVariables = (data: SelectableValue[]) => {
     getTemplateSrv()
       .getVariables()
       .forEach((v, i) => {
@@ -46,7 +46,7 @@ export const QueryEditor = (props: Props) => {
           return { label: row.url, value: row.url };
         });
       })
-      .then(prependDasboardVariables);
+      .then(prependDashboardVariables);
   };
 
   const loadColumns = (filter?: string): Promise<SelectableValue[]> => {
@@ -115,6 +115,24 @@ export const QueryEditor = (props: Props) => {
     cursor: text;
   }
   `;
+  var fromInput :HTMLInputElement;
+  // set current value so it can be changed instead of typing it again
+  const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
+    if(inp) {
+      fromInput = inp;
+    } else {
+      inp = fromInput;
+    }
+    inp.value = value;
+    setTimeout(() => {
+      inp.value = props.query.table;
+      inp.style.minWidth = inp.parentElement?.offsetWidth+"px";
+      // clear placeholder watermark, it overlaps current text
+      if(inp.parentElement && inp.parentElement.parentElement && inp.parentElement.parentElement.firstElementChild) {
+        inp.parentElement.parentElement.firstElementChild.innerHTML = "";
+      }
+    }, 200)
+  }
   return (
     <>
       <style>{css}</style>
@@ -123,13 +141,24 @@ export const QueryEditor = (props: Props) => {
           <></>
         </SegmentSection>
         <SegmentAsync
+          onFocus={(e) => {
+            // set current value so it can be changed instead of typing it again
+            makeInputEditable(props.query.table, e.target as HTMLInputElement)
+          }}
           value={toSelectableValue(props.query.table || '/')}
-          loadOptions={loadTables}
+          loadOptions={(filter?: string) : Promise<SelectableValue[]> => {
+              // set current value so it can be changed instead of typing it again
+              return loadTables(filter).then((data) => {
+                makeInputEditable(props.query.table)
+                return(data);
+              })
+          }}
           onChange={(v) => {
             onValueChange('table', v.value);
           }}
-          allowCustomValue={false}
+          allowCustomValue
           inputMinWidth={250}
+          noOptionMessageHandler={() => ''}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
