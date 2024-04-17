@@ -15,6 +15,8 @@ services:
       - ./provisioning:/etc/grafana/provisioning
     environment:
       - GF_USERS_DEFAULT_THEME=light
+    depends_on:
+      - buildwatch
   buildwatch:
     image: node:20
     command: bash -c "yarn install && yarn run dev"
