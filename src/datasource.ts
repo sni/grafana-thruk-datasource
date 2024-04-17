@@ -203,10 +203,22 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     return { data };
   }
 
+  /**
+   * Builds a FieldSchema object based on the provided key and optional type.
+   *
+   * @param {string} key - The name of the field.
+   * @param {FieldType} [type] - The type of the field. If not provided, it will be inferred based on the key.
+   * @return {FieldSchema} The built FieldSchema object.
+   */
   buildField(key: string, type?: FieldType): FieldSchema {
     if (type !== undefined) {
       return { name: key, type: type };
     }
+    // numbers (from availabilty checks)
+    if (key.match(/time_(down|up|unreachable|indeterminate|ok|warn|unknown|critical)/)) {
+      return { name: key, type: FieldType.number };
+    }
+    // timestamp fields
     if (key.match(/^(last_|next_|start_|end_|time)/)) {
       return { name: key, type: FieldType.time };
     }
