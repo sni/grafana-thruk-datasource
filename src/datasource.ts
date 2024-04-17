@@ -12,11 +12,12 @@ import {
   ScopedVars,
   FieldSchema,
   AnnotationQuery,
+  FieldConfig,
 } from '@grafana/data';
 import { BackendSrvRequest, getBackendSrv, toDataQueryResponse, getTemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable, throwError } from 'rxjs';
 
-import { ThrukQuery, ThrukDataSourceOptions, defaultQuery, ThrukColumnConfig } from './types';
+import { ThrukQuery, ThrukDataSourceOptions, defaultQuery, ThrukColumnConfig, ThrukColumnMetaColumn } from './types';
 import { isNumber } from 'lodash';
 
 export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions> {
@@ -121,7 +122,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           path + '&q=' + encodeURIComponent(this.replaceVariables(target.condition, options.range, options.scopedVars));
       }
 
-      queries.push(this.request('GET', path));
+      queries.push(this.request('GET', path, null, {"X-THRUK-OutputFormat": "wrapped_json"}));
       columns.push(col);
     });
 
@@ -143,15 +144,26 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         throw new Error('Query failed, got no result data');
         return;
       }
+      let meta = undefined;
+      let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
       if (!Array.isArray(target.result.data)) {
+        if(target.result.data.data && target.result.data.meta) {
+          meta = target.result.data.meta;
+          target.result.data = target.result.data.data;
+        }
         target.result.data = [target.result.data];
+      }
+      if(meta) {
+        meta.columns.forEach((column: ThrukColumnMetaColumn, i:number) => {
+          metaColumns[column.name] = column;
+        })
       }
       let fields = columns[i].fields;
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
           Object.keys(target.result.data[0]).forEach((key: string, i: number) => {
-            fields.push(this.buildField(key));
+            fields.push(this.buildField(key, metaColumns[key]?.type, metaColumns[key]?.config as FieldConfig));
           });
         }
       }
@@ -210,19 +222,36 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
    * @param {FieldType} [type] - The type of the field. If not provided, it will be inferred based on the key.
    * @return {FieldSchema} The built FieldSchema object.
    */
-  buildField(key: string, type?: FieldType): FieldSchema {
+  buildField(key: string, type?: FieldType|string, config?: FieldConfig): FieldSchema {
     if (type !== undefined) {
-      return { name: key, type: type };
+      let ftype = FieldType.string;
+      if(typeof(type) === 'string') {
+        ftype = this.str2fieldtype(type)
+      }
+      return { name: key, type: ftype, config:config };
     }
-    // numbers (from availabilty checks)
+    // seconds (from availabilty checks)
     if (key.match(/time_(down|up|unreachable|indeterminate|ok|warn|unknown|critical)/)) {
-      return { name: key, type: FieldType.number };
+      return { name: key, type: FieldType.number, config: { unit: "s" } };
     }
     // timestamp fields
     if (key.match(/^(last_|next_|start_|end_|time)/)) {
       return { name: key, type: FieldType.time };
     }
     return { name: key, type: FieldType.string };
+  }
+
+  str2fieldtype(str: string): FieldType  {
+    switch(str) {
+      case "number":
+        return FieldType.number;
+      case "time":
+        return FieldType.time;
+      case "bool":
+      case "boolean":
+        return FieldType.boolean;
+    }
+    return FieldType.string;
   }
 
   replaceVariables(str: string, range?: TimeRange, scopedVars?: ScopedVars) {
