@@ -57,12 +57,20 @@ export const QueryEditor = (props: Props) => {
     return props.datasource
       .request('GET', props.query.table + '?limit=1')
       .then((response) => {
-        if (!response.data || !response.data[0]) {
+        if (!response.data) {
           return [toSelectableValue('*')];
         }
-        return Object.keys(response.data[0]).map((key: string, i: number) => {
-          return toSelectableValue(key);
-        });
+        if (Array.isArray(response.data) && response.data[0]) {
+          return Object.keys(response.data[0]).map((key: string, i: number) => {
+            return toSelectableValue(key);
+          });
+        }
+        if (response.data instanceof Object) {
+          return Object.keys(response.data).map((key: string, i: number) => {
+            return toSelectableValue(key);
+          });
+        }
+        return [toSelectableValue('*')];
       })
       .then((data: SelectableValue[]) => {
         ['avg()', 'min()', 'max()', 'sum()', 'count()'].reverse().forEach((el) => {
