@@ -39,6 +39,7 @@ buildshell:
 test: build prettiercheck
 
 dev:
+	@mkdir -p dist
 	docker compose up
 
 clean:

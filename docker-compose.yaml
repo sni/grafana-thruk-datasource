@@ -1,13 +1,10 @@
-version: '3.0'
-
 services:
   grafana:
-    container_name: 'sni-thruk-datasource'
     build:
       context: ./.config
       args:
-        grafana_image: ${GRAFANA_IMAGE:-grafana-enterprise}
-        grafana_version: ${GRAFANA_VERSION:-10.2.2}
+        grafana_image: ${GRAFANA_IMAGE:-grafana-oss}
+        grafana_version: ${GRAFANA_VERSION:-latest}
     ports:
       - 3000:3000/tcp
     volumes:
@@ -16,10 +13,15 @@ services:
     environment:
       - GF_USERS_DEFAULT_THEME=light
     depends_on:
-      - buildwatch
+      buildwatch:
+        condition: service_healthy # start as soon as the first build is ready
   buildwatch:
     image: node:20
     command: bash -c "yarn install && yarn run dev"
     working_dir: /src
+    healthcheck:
+      test: test -f /src/dist/module.js
+      interval:       3s
+      start_period: 200s
     volumes:
       - .:/src
