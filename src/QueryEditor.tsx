@@ -127,10 +127,10 @@ export const QueryEditor = (props: Props) => {
   // set input field value and emit changed event
   const inputTypeValue = (inp: HTMLInputElement, value: string, skipEvent?: boolean) => {
     // special cases for select * and "+" button
-    if(value === "*" || value === "+") {
-      value = "";
+    if (value === '*' || value === '+') {
+      value = '';
     }
-    if(skipEvent) {
+    if (skipEvent) {
       inp.value = value;
       inp.style.minWidth = inp.parentElement?.offsetWidth + 'px';
       // clear placeholder watermark, it overlaps current text
@@ -139,8 +139,8 @@ export const QueryEditor = (props: Props) => {
       }
       return;
     }
-    let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
-    if(!nativeInputValueSetter) {
+    let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+    if (!nativeInputValueSetter) {
       inp.value = value;
       return;
     }
