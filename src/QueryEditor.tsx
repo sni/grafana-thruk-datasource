@@ -127,7 +127,7 @@ export const QueryEditor = (props: Props) => {
   // set input field value and emit changed event
   const inputTypeValue = (inp: HTMLInputElement, value: string, skipEvent?: boolean) => {
     // special cases for select * and "+" button
-    if(value == "*" || value == "+") {
+    if(value === "*" || value === "+") {
       value = "";
     }
     if(skipEvent) {
