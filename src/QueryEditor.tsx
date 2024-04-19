@@ -115,13 +115,14 @@ export const QueryEditor = (props: Props) => {
     cursor: text;
   }
   `;
-  let fromInput: HTMLInputElement;
+
+  let lastInput: HTMLInputElement;
   // set current value so it can be changed instead of typing it again
   const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
     if (inp) {
-      fromInput = inp;
+      lastInput = inp;
     } else {
-      inp = fromInput;
+      inp = lastInput;
     }
     if (!inp) {
       return;
@@ -131,10 +132,10 @@ export const QueryEditor = (props: Props) => {
       if (!inp) {
         return;
       }
-      inp.value = props.query.table;
+      inp.value = value;
       inp.style.minWidth = inp.parentElement?.offsetWidth + 'px';
       // clear placeholder watermark, it overlaps current text
-      if (inp.parentElement && inp.parentElement.parentElement && inp.parentElement.parentElement.firstElementChild) {
+      if (inp.parentElement?.parentElement?.firstElementChild) {
         inp.parentElement.parentElement.firstElementChild.innerHTML = '';
       }
     }, 200);
@@ -148,12 +149,10 @@ export const QueryEditor = (props: Props) => {
         </SegmentSection>
         <SegmentAsync
           onFocus={(e) => {
-            // set current value so it can be changed instead of typing it again
             makeInputEditable(props.query.table, e.target as HTMLInputElement);
           }}
           value={toSelectableValue(props.query.table || '/')}
           loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-            // set current value so it can be changed instead of typing it again
             return loadTables(filter).then((data) => {
               makeInputEditable(props.query.table);
               return data;
@@ -191,7 +190,15 @@ export const QueryEditor = (props: Props) => {
                           <SegmentAsync
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
-                            loadOptions={loadColumns}
+                            onFocus={(e) => {
+                              makeInputEditable(sel, e.target as HTMLInputElement);
+                            }}
+                            loadOptions={(filter?: string): Promise<SelectableValue[]> => {
+                              return loadColumns(filter).then((data) => {
+                                makeInputEditable(sel);
+                                return data;
+                              });
+                            }}
                             onChange={(v) => {
                               if (v.value === '') {
                                 // remove segment
