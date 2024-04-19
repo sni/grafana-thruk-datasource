@@ -151,9 +151,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           meta = target.result.data.meta;
           target.result.data = target.result.data.data;
         }
-        target.result.data = [target.result.data];
+        if (!Array.isArray(target.result.data)) {
+          target.result.data = [target.result.data];
+        }
       }
-      if (meta) {
+      if (meta && meta.columns) {
         meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
           metaColumns[column.name] = column;
         });
