@@ -125,9 +125,18 @@ export const QueryEditor = (props: Props) => {
   `;
 
   // set input field value and emit changed event
-  const inputTypeValue = (inp: HTMLInputElement, value: string) => {
+  const inputTypeValue = (inp: HTMLInputElement, value: string, skipEvent?: boolean) => {
     // special cases for select * and "+" button
     if(value == "*" || value == "+") {
+      value = "";
+    }
+    if(skipEvent) {
+      inp.value = value;
+      inp.style.minWidth = inp.parentElement?.offsetWidth + 'px';
+      // clear placeholder watermark, it overlaps current text
+      if (inp.parentElement?.parentElement?.firstElementChild) {
+        inp.parentElement.parentElement.firstElementChild.innerHTML = '';
+      }
       return;
     }
     let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
@@ -143,7 +152,7 @@ export const QueryEditor = (props: Props) => {
 
   let lastInput: HTMLInputElement;
   // set current value so it can be changed instead of typing it again
-  const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
+  const makeInputEditable = (value: string, inp?: HTMLInputElement, skipEvent?: boolean) => {
     if (inp) {
       lastInput = inp;
     } else {
@@ -152,12 +161,12 @@ export const QueryEditor = (props: Props) => {
     if (!inp) {
       return;
     }
-    inputTypeValue(inp, value);
+    inputTypeValue(inp, value, skipEvent);
     setTimeout(() => {
       if (!inp) {
         return;
       }
-      inputTypeValue(inp, value);
+      inputTypeValue(inp, value, skipEvent);
     }, 200);
   };
   return (
@@ -211,11 +220,11 @@ export const QueryEditor = (props: Props) => {
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
                             onFocus={(e) => {
-                              makeInputEditable(sel, e.target as HTMLInputElement);
+                              makeInputEditable(sel, e.target as HTMLInputElement, true);
                             }}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
                               return loadColumns(filter).then((data) => {
-                                makeInputEditable(sel);
+                                makeInputEditable(sel, undefined, true);
                                 return data;
                               });
                             }}
