@@ -1,6 +1,6 @@
 {
   "name": "grafana-thruk-datasource",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "grafana thruk datasource",
   "author": "Sven Nierlein",
   "license": "MIT",

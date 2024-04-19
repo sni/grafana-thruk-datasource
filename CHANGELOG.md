@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.0.5  2024-04-19
     - add support for column field config as part of the query result
     - make from and columns field editable in the queryeditor
     - make column selection work for hash response data
