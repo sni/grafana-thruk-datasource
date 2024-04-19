@@ -116,6 +116,23 @@ export const QueryEditor = (props: Props) => {
   }
   `;
 
+  // set input field value and emit changed event
+  const inputTypeValue = (inp: HTMLInputElement, value: string) => {
+    // special cases for select * and "+" button
+    if(value == "*" || value == "+") {
+      return;
+    }
+    let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+    if(!nativeInputValueSetter) {
+      inp.value = value;
+      return;
+    }
+    nativeInputValueSetter.call(inp, value);
+
+    const event = new Event('input', { bubbles: true });
+    inp.dispatchEvent(event);
+  };
+
   let lastInput: HTMLInputElement;
   // set current value so it can be changed instead of typing it again
   const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
@@ -127,17 +144,12 @@ export const QueryEditor = (props: Props) => {
     if (!inp) {
       return;
     }
-    inp.value = value;
+    inputTypeValue(inp, value);
     setTimeout(() => {
       if (!inp) {
         return;
       }
-      inp.value = value;
-      inp.style.minWidth = inp.parentElement?.offsetWidth + 'px';
-      // clear placeholder watermark, it overlaps current text
-      if (inp.parentElement?.parentElement?.firstElementChild) {
-        inp.parentElement.parentElement.firstElementChild.innerHTML = '';
-      }
+      inputTypeValue(inp, value);
     }, 200);
   };
   return (
