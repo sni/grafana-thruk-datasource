@@ -76,9 +76,6 @@ export const QueryEditor = (props: Props) => {
         ['avg()', 'min()', 'max()', 'sum()', 'count()'].reverse().forEach((el) => {
           data.unshift({ label: el, value: el });
         });
-        if (filter !== 'remove') {
-          data.unshift({ label: '-- remove --', value: '' });
-        }
         return data;
       });
   };
@@ -125,19 +122,10 @@ export const QueryEditor = (props: Props) => {
   `;
 
   // set input field value and emit changed event
-  const inputTypeValue = (inp: HTMLInputElement, value: string, skipEvent?: boolean) => {
+  const inputTypeValue = (inp: HTMLInputElement, value: string) => {
     // special cases for select * and "+" button
     if (value === '*' || value === '+') {
       value = '';
-    }
-    if (skipEvent) {
-      inp.value = value;
-      inp.style.minWidth = inp.parentElement?.offsetWidth + 'px';
-      // clear placeholder watermark, it overlaps current text
-      if (inp.parentElement?.parentElement?.firstElementChild) {
-        inp.parentElement.parentElement.firstElementChild.innerHTML = '';
-      }
-      return;
     }
     let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
     if (!nativeInputValueSetter) {
@@ -152,7 +140,7 @@ export const QueryEditor = (props: Props) => {
 
   let lastInput: HTMLInputElement;
   // set current value so it can be changed instead of typing it again
-  const makeInputEditable = (value: string, inp?: HTMLInputElement, skipEvent?: boolean) => {
+  const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
     if (inp) {
       lastInput = inp;
     } else {
@@ -161,12 +149,12 @@ export const QueryEditor = (props: Props) => {
     if (!inp) {
       return;
     }
-    inputTypeValue(inp, value, skipEvent);
+    inputTypeValue(inp, value);
     setTimeout(() => {
       if (!inp) {
         return;
       }
-      inputTypeValue(inp, value, skipEvent);
+      inputTypeValue(inp, value);
     }, 200);
   };
   let outputRef = useRef(null);
@@ -221,16 +209,17 @@ export const QueryEditor = (props: Props) => {
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
                             onFocus={(e) => {
-                              makeInputEditable(sel, e.target as HTMLInputElement, true);
+                              makeInputEditable(sel, e.target as HTMLInputElement);
                             }}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-                              return loadColumns(filter).then((data) => {
-                                makeInputEditable(sel, undefined, true);
-                                return data;
+                              return new Promise((resolve, reject) => {
+                                makeInputEditable(sel);
+                                let data: SelectableValue[] = [ { label: 'remove item', value: sel, icon: 'trash-alt', title: 'remove' } ];
+                                resolve(data);
                               });
                             }}
                             onChange={(v) => {
-                              if (v.value === '') {
+                              if (v.title === 'remove') {
                                 // remove segment
                                 props.query.columns.splice(index, 1);
                               } else {
@@ -262,9 +251,7 @@ export const QueryEditor = (props: Props) => {
         </DragDropContext>
         <SegmentAsync
           value={toSelectableValue('+')}
-          loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-            return loadColumns('remove');
-          }}
+          loadOptions={loadColumns}
           onChange={(v) => {
             props.query.columns.push(v.value);
             // remove '*' from list
