@@ -247,7 +247,7 @@ export const QueryEditor = (props: Props) => {
                               props.onChange(props.query);
                               debouncedRunQuery();
                             }}
-                            allowCustomValue={false}
+                            allowCustomValue
                             inputMinWidth={180}
                           />
                         </InlineLabel>
@@ -275,7 +275,7 @@ export const QueryEditor = (props: Props) => {
             props.onChange(props.query);
             debouncedRunQuery();
           }}
-          allowCustomValue={false}
+          allowCustomValue
           inputMinWidth={180}
         />
         <InlineField grow>
