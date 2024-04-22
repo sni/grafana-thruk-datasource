@@ -166,7 +166,13 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
           Object.keys(target.result.data[0]).forEach((key: string, i: number) => {
-            fields.push(this.buildField(metaColumns[key]?.name || key, metaColumns[key]?.type, metaColumns[key]?.config as FieldConfig));
+            fields.push(
+              this.buildField(
+                metaColumns[key]?.name || key,
+                metaColumns[key]?.type,
+                metaColumns[key]?.config as FieldConfig
+              )
+            );
           });
         }
       }
