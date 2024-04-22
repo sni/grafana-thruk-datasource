@@ -1,7 +1,7 @@
 import { defaults, debounce } from 'lodash';
 import React, { useMemo, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
-import { SegmentSection, InlineLabel, Input, SegmentAsync, InlineField } from '@grafana/ui';
+import { SegmentSection, InlineLabel, Input, SegmentAsync, InlineField, IconButton } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from './datasource';
@@ -158,6 +158,7 @@ export const QueryEditor = (props: Props) => {
     }, 200);
   };
   let outputRef = useRef(null);
+  let copyBtn = useRef(null);
   return (
     <>
       <style>{css}</style>
@@ -318,8 +319,8 @@ export const QueryEditor = (props: Props) => {
           <></>
         </SegmentSection>
         <Input
-          width={24}
-          placeholder="enter text to url encode"
+          width={16}
+          placeholder="url encode text"
           onChange={(v) => {
             if (outputRef.current) {
               if ((outputRef.current as any) instanceof HTMLInputElement) {
@@ -329,7 +330,40 @@ export const QueryEditor = (props: Props) => {
             }
           }}
         />
-        <Input ref={outputRef} width={24} placeholder="output" value={''} readOnly={true} />
+        <Input ref={outputRef} width={12} placeholder="output" value={''} readOnly={true} />
+        <IconButton
+         ref={copyBtn}
+         name='copy'
+         size='lg'
+         variant='secondary'
+         tooltip='Copy encoded text to clipboard'
+         style={{ padding: '6px', borderRadius: '4px' }}
+         onClick={(e) => {
+            if (outputRef.current) {
+              if ((outputRef.current as any) instanceof HTMLInputElement) {
+                let inp = outputRef.current as HTMLInputElement;
+                try {
+                  if(navigator.clipboard) {
+                    navigator.clipboard.writeText(inp.value);
+                  }
+                  if (copyBtn.current) {
+                    if ((copyBtn.current as any) instanceof HTMLButtonElement) {
+                      let btn = copyBtn.current as HTMLButtonElement;
+                      btn.style.transition = '';
+                      btn.style.backgroundColor = "#00b500";
+                      setTimeout(() => {
+                        btn.style.transition = 'background-color 1s';
+                        btn.style.backgroundColor = "";
+                      }, 500);
+                    }
+                  }
+                } catch (e) {
+                  console.log(e)
+                }
+              }
+            }
+         }}
+        />
       </div>
     </>
   );
