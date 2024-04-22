@@ -155,17 +155,18 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           target.result.data = [target.result.data];
         }
       }
+      let fields = columns[i].fields;
       if (meta && meta.columns) {
         meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
           metaColumns[column.name] = column;
+          fields[i].name = column.name;
         });
       }
-      let fields = columns[i].fields;
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
           Object.keys(target.result.data[0]).forEach((key: string, i: number) => {
-            fields.push(this.buildField(key, metaColumns[key]?.type, metaColumns[key]?.config as FieldConfig));
+            fields.push(this.buildField(metaColumns[key]?.name || key, metaColumns[key]?.type, metaColumns[key]?.config as FieldConfig));
           });
         }
       }
