@@ -1,5 +1,5 @@
 import { defaults, debounce } from 'lodash';
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 import { SegmentSection, InlineLabel, Input, SegmentAsync, InlineField } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
@@ -169,6 +169,7 @@ export const QueryEditor = (props: Props) => {
       inputTypeValue(inp, value, skipEvent);
     }, 200);
   };
+  let outputRef = useRef(null);
   return (
     <>
       <style>{css}</style>
@@ -326,6 +327,28 @@ export const QueryEditor = (props: Props) => {
         <InlineField grow>
           <InlineLabel> </InlineLabel>
         </InlineField>
+        <SegmentSection label="Helper">
+          <></>
+        </SegmentSection>
+        <Input
+          width={24}
+          placeholder="enter text to url encode"
+          onChange={(v) => {
+            if(outputRef.current) {
+              if(outputRef.current as any instanceof HTMLInputElement) {
+                let inp = outputRef.current as HTMLInputElement;
+                inp.value = encodeURIComponent(v.currentTarget.value);
+              }
+            }
+          }}
+        />
+        <Input
+          ref={outputRef}
+          width={24}
+          placeholder="output"
+          value={""}
+          readOnly={true}
+        />
       </div>
     </>
   );
