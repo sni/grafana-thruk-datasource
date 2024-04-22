@@ -334,21 +334,15 @@ export const QueryEditor = (props: Props) => {
           width={24}
           placeholder="enter text to url encode"
           onChange={(v) => {
-            if(outputRef.current) {
-              if(outputRef.current as any instanceof HTMLInputElement) {
+            if (outputRef.current) {
+              if ((outputRef.current as any) instanceof HTMLInputElement) {
                 let inp = outputRef.current as HTMLInputElement;
                 inp.value = encodeURIComponent(v.currentTarget.value);
               }
             }
           }}
         />
-        <Input
-          ref={outputRef}
-          width={24}
-          placeholder="output"
-          value={""}
-          readOnly={true}
-        />
+        <Input ref={outputRef} width={24} placeholder="output" value={''} readOnly={true} />
       </div>
     </>
   );
