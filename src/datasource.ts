@@ -321,14 +321,20 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
   async request(method: string, url: string, data?: any, headers?: BackendSrvRequest['headers']): Promise<any> {
     try {
       let result = await lastValueFrom(this._request(method, url, data, headers));
+      let resultData = result.data;
+      if (!Array.isArray(resultData)) {
+        if (resultData && resultData.data && resultData.meta) {
+          resultData = resultData.data;
+        }
+      }
+
       // pass throught thruk errors
-      if (result && result.data && result.data.failed && result.data.code && result.data.code >= 400) {
-        throw new Error(
-          result.data.code +
-            ' ' +
-            result.data.message +
-            (result.data.description ? ' (' + result.data.description + ')' : '')
-        );
+      if (resultData && resultData.message && resultData.code && resultData.code >= 400) {
+        let description = resultData.description;
+        if (description) {
+          description = description.replace(/\s+at\s+.*\s+line\s+\d+\./, '');
+        }
+        throw new Error(resultData.code + ' ' + resultData.message + (description ? ' (' + description + ')' : ''));
       }
       return result;
     } catch (error: unknown) {
