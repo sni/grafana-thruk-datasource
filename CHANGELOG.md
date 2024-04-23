@@ -1,5 +1,8 @@
 ### Changelog
 
+2.0.6  2024-04-23
+    - add url encode helper to query editor
+
 2.0.5  2024-04-19
     - add support for column field config as part of the query result
     - make from and columns field editable in the queryeditor
