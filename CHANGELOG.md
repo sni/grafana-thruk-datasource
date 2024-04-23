@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.0.7  2024-04-23
     - improve query parsing for variable queries
 
 2.0.6  2024-04-23
