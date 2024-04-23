@@ -160,6 +160,12 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
           metaColumns[column.name] = column;
           fields[i].name = column.name;
+          if (column.type) {
+            fields[i].type = this.str2fieldtype(column.type);
+          }
+          if (column.config) {
+            fields[i].config = column.config as FieldConfig;
+          }
         });
       }
       if (!columns[i].hasColumns) {
