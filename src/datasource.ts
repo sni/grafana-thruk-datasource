@@ -309,7 +309,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
   }
 
   parseVariableQuery(query: string): ThrukQuery {
-    let tmp = query.match(/^\s*SELECT\s+([\w_,\ ]+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))(|\s+LIMIT\s+(\d+))$/i);
+    let tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))(|\s+LIMIT\s+(\d+))$/i);
     if (!tmp) {
       throw new Error(
         'query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>] [LIMIT <limit>]'
@@ -317,7 +317,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     }
     return {
       table: tmp[2],
-      columns: tmp[1].replace(/\s+/g, '').split(','),
+      columns: [tmp[1]],
       condition: tmp[4],
       limit: tmp[6] ? Number(tmp[6]) : 0,
       type: 'table',

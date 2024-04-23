@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - improve query parsing for variable queries
+
 2.0.6  2024-04-23
     - add url encode helper to query editor
 
