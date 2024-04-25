@@ -156,18 +156,6 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         }
       }
       let fields = columns[i].fields;
-      if (meta && meta.columns) {
-        meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
-          metaColumns[column.name] = column;
-          fields[i].name = column.name;
-          if (column.type) {
-            fields[i].type = this.str2fieldtype(column.type);
-          }
-          if (column.config) {
-            fields[i].config = column.config as FieldConfig;
-          }
-        });
-      }
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
@@ -181,6 +169,18 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
             );
           });
         }
+      }
+      if (meta && meta.columns) {
+        meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
+          metaColumns[column.name] = column;
+          fields[i].name = column.name;
+          if (column.type) {
+            fields[i].type = this.str2fieldtype(column.type);
+          }
+          if (column.config) {
+            fields[i].config = column.config as FieldConfig;
+          }
+        });
       }
 
       // adjust number / time field types
