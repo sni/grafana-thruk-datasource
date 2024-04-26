@@ -213,8 +213,8 @@ export const QueryEditor = (props: Props) => {
                               makeInputEditable(sel, e.target as HTMLInputElement);
                             }}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-                              if(sel === '*') {
-                                return loadColumns()
+                              if (sel === '*') {
+                                return loadColumns();
                               }
                               return new Promise((resolve, reject) => {
                                 makeInputEditable(sel);
