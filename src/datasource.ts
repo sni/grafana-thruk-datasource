@@ -202,7 +202,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       }
 
       if (target.type === 'graph') {
-        this._fakeTimeseries(data, query, target.result.data as Array<{}>, options);
+        this._fakeTimeseries(data, query, target.result.data as Array<{}>, options, columns[i]);
         return;
       }
 
@@ -473,7 +473,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     response: DataQueryResponseData[],
     target: ThrukQuery,
     data: any[],
-    options: DataQueryRequest<ThrukQuery>
+    options: DataQueryRequest<ThrukQuery>,
+    columns: ThrukColumnConfig
   ) {
     let steps = 10;
     let from = options.range.from.unix();
@@ -484,60 +485,62 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return;
     }
 
+    let orderedColumns: string[] = Object.keys(data[0]);
+    if (columns.columns.length > 0) {
+      orderedColumns = columns.columns;
+    }
+
     // convert single row results with multiple columns into usable data rows
-    if (data.length === 1 && Object.keys(data[0]).length > 2) {
+    if (data.length === 1 && orderedColumns.length > 2) {
       let converted: any[] = [];
-      Object.keys(data[0]).forEach((key) => {
+      orderedColumns.forEach((key) => {
         converted.push([key, data[0][key]]);
       });
       data = converted;
     }
 
-    let valueCol = '';
-    let nameCol = '';
+    let valueCol: string[] = [];
+    let nameCol: string[] = [];
     // find first column using aggregation function and use this as value
-    Object.keys(data[0]).forEach((key) => {
+    orderedColumns.forEach((key) => {
       if (key.match(/^\w+\(.*\)$/)) {
-        valueCol = key;
-        return false;
+        valueCol.push(key);
       }
-      return true;
     });
 
     // nothing found, use first column with a numeric value
-    if (valueCol === '') {
-      Object.keys(data[0]).forEach((key) => {
+    if (valueCol.length === 0) {
+      orderedColumns.forEach((key) => {
         if (isNumber(data[0][key])) {
-          valueCol = key;
-          return false;
+          valueCol.push(key);
         }
-        return true;
       });
     }
 
     // use first available column if none set yet
-    if (valueCol === '') {
-      valueCol = Object.keys(data[0])[0];
+    if (valueCol.length === 0) {
+      valueCol.push(orderedColumns[0]);
     }
 
-    // use first column which is not the value column as name, otherwise use name of value column
-    if (Object.keys(data[0]).length > 1) {
-      Object.keys(data[0]).forEach((key) => {
-        if (key !== valueCol) {
-          nameCol = key;
-          return false;
-        }
-        return true;
-      });
-    }
+    // name columns are all remaining columns not used as value
+    orderedColumns.forEach((key) => {
+      if (!valueCol.includes(key)) {
+        nameCol.push(key);
+      }
+    });
 
     // create timeseries based on group by keys
     data.forEach((row) => {
-      if (Object.keys(row).length > 2) {
-        throw new Error('timeseries with more than 2 columns are not supported.');
+      let val = row[valueCol[0]];
+      let names: string[] = [];
+      if (nameCol.length === 0) {
+        names = [valueCol[0]];
+      } else {
+        nameCol.forEach((key) => {
+          names.push(row[key]);
+        });
       }
-      let val = row[valueCol];
-      let alias = nameCol !== '' ? row[nameCol] : valueCol;
+      let alias = names.join(';');
       const frame = new MutableDataFrame({
         refId: target.refId,
         meta: {

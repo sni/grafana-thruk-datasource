@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - add support for stats queries as timeseries having multiple name columns
+
 2.0.7  2024-04-23
     - improve query parsing for variable queries
 
