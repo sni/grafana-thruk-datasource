@@ -6,7 +6,7 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from './datasource';
 import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from './types';
-import {AsyncSelectField} from "./AsyncSelectField";
+import { AsyncSelectField } from './AsyncSelectField';
 
 type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
 
@@ -168,17 +168,17 @@ export const QueryEditor = (props: Props) => {
           <></>
         </SegmentSection>
         <AsyncSelectField
-            value={toSelectableValue(props.query.table || '/')}
-            loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-              return loadTables(filter).then((data) => {
-                makeInputEditable(props.query.table);
-                return data;
-              });
-            }}
-            onChange={(v) => {
-              onValueChange('table', v.value);
-            }}
-            onCreateOption={(customValue) => onValueChange('table', customValue)}
+          value={toSelectableValue(props.query.table || '/')}
+          loadOptions={(filter?: string): Promise<SelectableValue[]> => {
+            return loadTables(filter).then((data) => {
+              makeInputEditable(props.query.table);
+              return data;
+            });
+          }}
+          onChange={(v) => {
+            onValueChange('table', v.value);
+          }}
+          onCreateOption={(customValue) => onValueChange('table', customValue)}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
