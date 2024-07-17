@@ -9,7 +9,7 @@ interface AsyncSelectFieldProps extends AsyncSelectProps<any>{
 
 export function AsyncSelectField(props: AsyncSelectFieldProps) {
     const [isSelected, setIsSelected] = useState<boolean>(false);
-    const [loadChache, setLoadChache] = useState<SelectableValue<any>[] | PromiseLike<SelectableValue<any>[]>>([]);
+    const [loadChache, setLoadChache] = useState<Array<SelectableValue<any>> | PromiseLike<Array<SelectableValue<any>>>>([]);
 
     useEffect(() => {
         const fetchOptions = async () => {
@@ -18,9 +18,9 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
         };
 
         fetchOptions();
-    }, []);
+    }, );
 
-    const getOptions = (): void | Promise<SelectableValue<any>[]> => {
+    const getOptions = (): void | Promise<Array<SelectableValue<any>>> => {
         return new Promise(resolve => {
             resolve(loadChache);
         });
