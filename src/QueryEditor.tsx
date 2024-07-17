@@ -170,8 +170,6 @@ export const QueryEditor = (props: Props) => {
         <AsyncSelectField
             value={toSelectableValue(props.query.table || '/')}
             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-              console.log("options loaded");
-
               return loadTables(filter).then((data) => {
                 makeInputEditable(props.query.table);
                 return data;

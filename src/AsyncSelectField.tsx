@@ -60,7 +60,6 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
                 <SegmentAsync
                     value={props.value}
                     loadOptions={() => {
-                        console.log("Dummy options loaded")
                         return Promise.resolve([]);
                     }}
                     onChange={props.onChange}
@@ -68,7 +67,6 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
                     noOptionMessageHandler={() => ''}
                     onFocus={() => {
                         setIsSelected(true);
-                        console.log("Focus lost");
                     }}
                 />
             )
