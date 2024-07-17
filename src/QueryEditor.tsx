@@ -6,6 +6,7 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from './datasource';
 import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from './types';
+import {AsyncSelectField} from "./AsyncSelectField";
 
 type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
 
@@ -166,23 +167,20 @@ export const QueryEditor = (props: Props) => {
         <SegmentSection label="FROM">
           <></>
         </SegmentSection>
-        <SegmentAsync
-          onFocus={(e) => {
-            makeInputEditable(props.query.table, e.target as HTMLInputElement);
-          }}
-          value={toSelectableValue(props.query.table || '/')}
-          loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-            return loadTables(filter).then((data) => {
-              makeInputEditable(props.query.table);
-              return data;
-            });
-          }}
-          onChange={(v) => {
-            onValueChange('table', v.value);
-          }}
-          allowCustomValue
-          inputMinWidth={250}
-          noOptionMessageHandler={() => ''}
+        <AsyncSelectField
+            value={toSelectableValue(props.query.table || '/')}
+            loadOptions={(filter?: string): Promise<SelectableValue[]> => {
+              console.log("options loaded");
+
+              return loadTables(filter).then((data) => {
+                makeInputEditable(props.query.table);
+                return data;
+              });
+            }}
+            onChange={(v) => {
+              onValueChange('table', v.value);
+            }}
+            onCreateOption={(customValue) => onValueChange('table', customValue)}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
@@ -206,12 +204,9 @@ export const QueryEditor = (props: Props) => {
                         style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                       >
                         <InlineLabel width={'auto'} className="thruk-dnd-label">
-                          <SegmentAsync
+                          <AsyncSelectField
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
-                            onFocus={(e) => {
-                              makeInputEditable(sel, e.target as HTMLInputElement);
-                            }}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
                               if (sel === '*') {
                                 return loadColumns();
@@ -242,8 +237,6 @@ export const QueryEditor = (props: Props) => {
                               props.onChange(props.query);
                               debouncedRunQuery();
                             }}
-                            allowCustomValue
-                            inputMinWidth={180}
                           />
                         </InlineLabel>
                       </div>
@@ -255,7 +248,7 @@ export const QueryEditor = (props: Props) => {
             )}
           </Droppable>
         </DragDropContext>
-        <SegmentAsync
+        <AsyncSelectField
           value={toSelectableValue('+')}
           loadOptions={loadColumns}
           onChange={(v) => {
@@ -268,8 +261,6 @@ export const QueryEditor = (props: Props) => {
             props.onChange(props.query);
             debouncedRunQuery();
           }}
-          allowCustomValue
-          inputMinWidth={180}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
