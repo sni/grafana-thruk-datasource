@@ -128,12 +128,12 @@ For testing you can use the demo Thruk instance at:
 How to create a new release:
 
     %> export RELVERSION=1.0.7
-    %> export GRAFANA_API_KEY=...
+    %> export GRAFANA_ACCESS_POLICY_TOKEN=...
     %> vi package.json # replace version
     %> vi CHANGELOG.md # add changelog entry
     %> git commit -am "Release v${RELVERSION}"
     %> git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}"
-    %> make GRAFANA_API_KEY=${GRAFANA_API_KEY} releasebuild
+    %> make GRAFANA_ACCESS_POLICY_TOKEN=${GRAFANA_ACCESS_POLICY_TOKEN} releasebuild
     # create release here https://github.com/sni/grafana-thruk-datasource/releases/new
     # submit plugin update here https://grafana.com/orgs/sni/plugins
 
