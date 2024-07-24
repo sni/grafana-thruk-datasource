@@ -29,6 +29,50 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
     });
   };
 
+  //
+  // set input field value and emit changed event
+  const inputTypeValue = (inp: HTMLInputElement, value: string) => {
+    // special cases for select * and "+" button
+    if (value === '*' || value === '+') {
+      value = '';
+    }
+    let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+    if (!nativeInputValueSetter) {
+      inp.value = value;
+      return;
+    }
+    nativeInputValueSetter.call(inp, value);
+
+    const event = new Event('input', { bubbles: true });
+    inp.dispatchEvent(event);
+  };
+
+  let lastInput: HTMLInputElement;
+  // set current value so it can be changed instead of typing it again
+  const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
+    if (inp) {
+      lastInput = inp;
+    } else {
+      inp = lastInput;
+    }
+    if (!inp) {
+      return;
+    }
+    console.log(value);
+    inputTypeValue(inp, value);
+    setTimeout(() => {
+      if (!inp) {
+        return;
+      }
+      inputTypeValue(inp, value);
+    }, 200);
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    console.log(props.value, e.target);
+    makeInputEditable(props.value.value, e.target as HTMLInputElement);
+  };
+
   const component = (): React.ReactNode => {
     if (isSelected) {
       return (
@@ -52,6 +96,7 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
           isClearable={false}
           onBlur={() => setIsSelected(false)}
           autoFocus={true}
+          onFocus={handleFocus as unknown as () => void}
           isOpen={true}
           onCloseMenu={() => setIsSelected(false)}
           width={'auto'}
