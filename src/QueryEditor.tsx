@@ -352,7 +352,7 @@ export const QueryEditor = (props: Props) => {
                     }
                   }
                 } catch (e) {
-                  console.log(e);
+                  console.warn(e);
                 }
               }
             }

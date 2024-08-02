@@ -344,8 +344,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       }
       return result;
     } catch (error: unknown) {
-      console.error('failed to fetch ' + url);
-      console.error(error);
+      console.warn('failed to fetch ' + url);
+      console.warn(error);
       if (typeof error === 'string') {
         throw new Error(error);
       }

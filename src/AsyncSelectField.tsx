@@ -58,7 +58,6 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
     if (!inp) {
       return;
     }
-    console.log(value);
     inputTypeValue(inp, value);
     setTimeout(() => {
       if (!inp) {
@@ -69,7 +68,6 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    console.log(props.value, e.target);
     makeInputEditable(props.value.value, e.target as HTMLInputElement);
   };
 
