@@ -1,5 +1,8 @@
 ### Changelog
 
+2.1.0  2024-08-02
+    - improve query editor
+
 2.0.8  2024-05-14
     - add support for stats queries as timeseries having multiple name columns
 
