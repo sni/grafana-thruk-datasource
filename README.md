@@ -1,6 +1,6 @@
 # Thruk Grafana Datasource - a Grafana backend datasource using Thruks REST API
 
-![Thruk Grafana Datasource](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/img/screenshot.png "Thruk Grafana Datasource")
+![Thruk Grafana Datasource](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/src/img/screenshot.png "Thruk Grafana Datasource")
 
 ## Installation
 
