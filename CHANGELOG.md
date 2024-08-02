@@ -1,5 +1,8 @@
 ### Changelog
 
+2.1.1  2024-08-02
+    - remove console.log debug output
+
 2.1.0  2024-08-02
     - improve query editor
 
