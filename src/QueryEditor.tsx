@@ -50,7 +50,7 @@ export const QueryEditor = (props: Props) => {
       .then(prependDashboardVariables);
   };
 
-  const loadColumns = (filter?: string): Promise<SelectableValue[]> => {
+  const loadColumns = (filter?: string, addRemove?: string): Promise<SelectableValue[]> => {
     if (!props.query.table) {
       return Promise.resolve([toSelectableValue('*')]);
     }
@@ -77,6 +77,9 @@ export const QueryEditor = (props: Props) => {
         ['avg()', 'min()', 'max()', 'sum()', 'count()'].reverse().forEach((el) => {
           data.unshift({ label: el, value: el });
         });
+        if (addRemove && addRemove !== '' && addRemove !== '*') {
+          data.unshift({ label: 'remove ' + addRemove, value: 'remove', icon: 'trash-alt', title: 'remove' });
+        }
         return data;
       });
   };
@@ -206,16 +209,10 @@ export const QueryEditor = (props: Props) => {
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-                              if (sel === '*') {
-                                return loadColumns();
-                              }
-                              return new Promise((resolve, reject) => {
+                              if (sel !== '*') {
                                 makeInputEditable(sel);
-                                let data: SelectableValue[] = [
-                                  { label: 'remove item', value: sel, icon: 'trash-alt', title: 'remove' },
-                                ];
-                                resolve(data);
-                              });
+                              }
+                              return loadColumns(filter, sel);
                             }}
                             onChange={(v) => {
                               if (v.title === 'remove') {
