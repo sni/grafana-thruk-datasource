@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.1.2  2025-01-15
     - fix remove columns button
     - fix broken query if FROM contains url parameter already
 
