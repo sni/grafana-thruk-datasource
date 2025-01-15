@@ -56,7 +56,7 @@ export const QueryEditor = (props: Props) => {
     }
 
     return props.datasource
-      .request('GET', props.query.table + '?limit=1')
+      .request('GET', props.datasource._appendUrlParam(props.query.table, 'limit=1'))
       .then((response) => {
         if (!response.data) {
           return [toSelectableValue('*')];

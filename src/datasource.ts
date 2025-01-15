@@ -113,7 +113,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       path = path.replace(/^\//, '');
       path = this.replaceVariables(path, options.range, options.scopedVars);
 
-      path = path + '?limit=' + encodeURIComponent(target.limit > 0 ? target.limit : '');
+      path = this._appendUrlParam(path, 'limit=' + encodeURIComponent(target.limit > 0 ? target.limit : ''));
       if (col.hasColumns) {
         path = path + '&columns=' + encodeURIComponent(col.columns.join(','));
       }
@@ -413,6 +413,13 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     url = url.replace(/^\//, '');
     url = this.url + '/r/v1/' + url;
     return url;
+  }
+
+  _appendUrlParam(url: string, param: string): string {
+    if (url.match(/\?/)) {
+      return url + '&' + param;
+    }
+    return url + '?' + param;
   }
 
   _fixup_regex(value: any) {
