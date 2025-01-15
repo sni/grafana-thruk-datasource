@@ -1,5 +1,9 @@
 ### Changelog
 
+next:
+    - fix remove columns button
+    - fix broken query if FROM contains url parameter already
+
 2.1.1  2024-08-02
     - remove console.log debug output
 
