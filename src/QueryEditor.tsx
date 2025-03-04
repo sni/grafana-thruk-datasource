@@ -1,6 +1,6 @@
 import { defaults, debounce } from 'lodash';
 import React, { useMemo, useRef } from 'react';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import { SegmentSection, InlineLabel, Input, SegmentAsync, InlineField, IconButton } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';

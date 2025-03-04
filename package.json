@@ -39,7 +39,6 @@
     "@types/jest": "^29.5.0",
     "@types/lodash": "^4.14.194",
     "@types/node": "^18.15.11",
-    "@types/react-beautiful-dnd": "^13.1.4",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.7.3",
     "eslint-webpack-plugin": "^4.0.1",
@@ -66,6 +65,7 @@
     "@grafana/data": "^11.1.0",
     "@grafana/runtime": "^11.1.0",
     "@grafana/ui": "^11.1.0",
+    "@hello-pangea/dnd": "^18.0.1",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "tslib": "2.6.3"
