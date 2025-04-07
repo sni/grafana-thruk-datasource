@@ -5,7 +5,7 @@ import { SelectableValue } from '@grafana/data';
 interface AsyncSelectFieldProps extends AsyncSelectProps<any> {
   loadOptions: (query?: string | undefined) => Promise<Array<SelectableValue<any>>>;
   onChange: (item: SelectableValue<any>) => void;
-  isClearable : boolean
+  isClearable: boolean;
 }
 
 export function AsyncSelectField(props: AsyncSelectFieldProps) {

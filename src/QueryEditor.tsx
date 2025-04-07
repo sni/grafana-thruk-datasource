@@ -180,7 +180,7 @@ export const QueryEditor = (props: Props) => {
             });
           }}
           onChange={(v) => {
-            onValueChange('table', v !== null ?  v.value : '/');
+            onValueChange('table', v !== null ? v.value : '/');
           }}
           onCreateOption={(customValue) => onValueChange('table', customValue)}
           width={'auto'}
@@ -208,7 +208,7 @@ export const QueryEditor = (props: Props) => {
                       >
                         <InlineLabel width={'auto'} className="thruk-dnd-label">
                           <AsyncSelectField
-                          isClearable={false}
+                            isClearable={false}
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
