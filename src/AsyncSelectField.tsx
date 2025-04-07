@@ -1,10 +1,11 @@
-import { AsyncSelect, AsyncSelectProps, SegmentAsync } from '@grafana/ui';
+import { AsyncSelect, AsyncSelectProps } from '@grafana/ui';
 import React, { useEffect, useState } from 'react';
 import { SelectableValue } from '@grafana/data';
 
 interface AsyncSelectFieldProps extends AsyncSelectProps<any> {
   loadOptions: (query?: string | undefined) => Promise<Array<SelectableValue<any>>>;
   onChange: (item: SelectableValue<any>) => void;
+  isClearable : boolean
 }
 
 export function AsyncSelectField(props: AsyncSelectFieldProps) {
@@ -91,7 +92,7 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
           allowCreateWhileLoading={true}
           onCreateOption={props.onCreateOption}
           disabled={false}
-          isClearable={false}
+          isClearable={props.isClearable}
           onBlur={() => setIsSelected(false)}
           autoFocus={true}
           onFocus={handleFocus as unknown as () => void}
@@ -102,7 +103,7 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
       );
     } else {
       return (
-        <SegmentAsync
+        <AsyncSelect
           value={props.value}
           loadOptions={() => {
             return Promise.resolve([]);
@@ -113,6 +114,7 @@ export function AsyncSelectField(props: AsyncSelectFieldProps) {
           onFocus={() => {
             setIsSelected(true);
           }}
+          isClearable={props.isClearable}
         />
       );
     }

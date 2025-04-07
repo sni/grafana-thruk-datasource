@@ -171,6 +171,7 @@ export const QueryEditor = (props: Props) => {
           <></>
         </SegmentSection>
         <AsyncSelectField
+          isClearable
           value={toSelectableValue(props.query.table || '/')}
           loadOptions={(filter?: string): Promise<SelectableValue[]> => {
             return loadTables(filter).then((data) => {
@@ -179,9 +180,10 @@ export const QueryEditor = (props: Props) => {
             });
           }}
           onChange={(v) => {
-            onValueChange('table', v.value);
+            onValueChange('table', v !== null ?  v.value : '/');
           }}
           onCreateOption={(customValue) => onValueChange('table', customValue)}
+          width={'auto'}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
@@ -206,6 +208,7 @@ export const QueryEditor = (props: Props) => {
                       >
                         <InlineLabel width={'auto'} className="thruk-dnd-label">
                           <AsyncSelectField
+                          isClearable={false}
                             key={props.query.table}
                             value={toSelectableValue(sel || '*')}
                             loadOptions={(filter?: string): Promise<SelectableValue[]> => {
@@ -244,6 +247,7 @@ export const QueryEditor = (props: Props) => {
           </Droppable>
         </DragDropContext>
         <AsyncSelectField
+          isClearable={false}
           value={toSelectableValue('+')}
           loadOptions={loadColumns}
           onChange={(v) => {
