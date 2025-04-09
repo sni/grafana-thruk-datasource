@@ -71,11 +71,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       'GET',
       query.table +
         '?q=' +
-        encodeURIComponent(query.condition || '') +
+        encodeURIComponent(this.replaceVariables(query.condition || '')) +
         '&columns=' +
-        encodeURIComponent(query.columns.join(',')) +
+        encodeURIComponent(this.replaceVariables(query.columns.join(','))) +
         '&limit=' +
-        encodeURIComponent(query.limit > 0 ? query.limit : '')
+        encodeURIComponent(this.replaceVariables((query.limit > 0 ? query.limit : '').toString()))
     ).then((response) => {
       let key = query.columns[0];
       return response.data.map((row: any) => {
@@ -113,9 +113,12 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       path = path.replace(/^\//, '');
       path = this.replaceVariables(path, options.range, options.scopedVars);
 
-      path = this._appendUrlParam(path, 'limit=' + encodeURIComponent(target.limit > 0 ? target.limit : ''));
+      path = this._appendUrlParam(
+        path,
+        'limit=' + encodeURIComponent(this.replaceVariables((target.limit > 0 ? target.limit : '').toString()))
+      );
       if (col.hasColumns) {
-        path = path + '&columns=' + encodeURIComponent(col.columns.join(','));
+        path = path + '&columns=' + encodeURIComponent(this.replaceVariables(col.columns.join(',')));
       }
       if (target.condition) {
         path =
