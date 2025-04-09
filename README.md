@@ -116,6 +116,8 @@ The dev instance can be accessed at `http://localhost:3000``
 Note: You need to add the datasource manually and you need to run "make build" once
   before starting the dev container, otherwise Grafana won't find the datasource.
 
+The grafana widget documentation is available here: https://developers.grafana.com/ui/latest/
+
 ### Testing
 
 For testing you can use the demo Thruk instance at:

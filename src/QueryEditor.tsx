@@ -1,87 +1,87 @@
 import { defaults, debounce } from 'lodash';
 import React, { useMemo, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
-import { SegmentSection, InlineLabel, Input, SegmentAsync, InlineField, IconButton } from '@grafana/ui';
+import {
+  SegmentSection,
+  InlineLabel,
+  ComboboxOption,
+  Input,
+  SegmentAsync,
+  InlineField,
+  IconButton,
+  Combobox,
+} from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from './datasource';
 import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from './types';
-import { AsyncSelectField } from './AsyncSelectField';
 
 type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
-
-export function toSelectableValue<T extends string>(t: T): SelectableValue<T> {
-  return { label: t, value: t };
-}
 
 export const QueryEditor = (props: Props) => {
   const { onRunQuery } = props;
   const debouncedRunQuery = useMemo(() => debounce(onRunQuery, 500), [onRunQuery]);
   props.query = defaults(props.query, defaultQuery);
 
-  const prependDashboardVariables = (data: SelectableValue[]) => {
+  const prependDashboardVariables = (data: string[]) => {
     getTemplateSrv()
       .getVariables()
       .forEach((v, i) => {
-        data.unshift({
-          label: '/^$' + v.name + '$/',
-          value: '/^$' + v.name + '$/',
-        });
+        data.unshift('/^$' + v.name + '$/');
       });
     return data;
   };
 
-  const loadTypes = (filter?: string): Promise<SelectableValue[]> => {
-    return Promise.resolve([
-      { label: 'Table', value: 'table' },
-      { label: 'Timeseries', value: 'graph' },
-      { label: 'Logs', value: 'logs' },
-    ]);
-  };
-
-  const loadTables = (filter?: string): Promise<SelectableValue[]> => {
+  const loadTables = (filter?: string): Promise<string[]> => {
     return props.datasource
       .request('GET', '/index?columns=url&protocol=get')
       .then((response) => {
         return response.data.map((row: { url?: string }) => {
-          return { label: row.url, value: row.url };
+          return row.url;
         });
       })
-      .then(prependDashboardVariables);
+      .then(prependDashboardVariables)
+      .then((data) =>
+        data.filter((item) => {
+          return !filter || (item && item.toLowerCase().includes(filter.toLowerCase()));
+        })
+      );
   };
 
-  const loadColumns = (filter?: string, addRemove?: string): Promise<SelectableValue[]> => {
+  const loadColumns = (filter?: string): Promise<string[]> => {
     if (!props.query.table) {
-      return Promise.resolve([toSelectableValue('*')]);
+      return Promise.resolve(['*']);
     }
-
     return props.datasource
       .request('GET', props.datasource._appendUrlParam(props.query.table, 'limit=1'))
       .then((response) => {
         if (!response.data) {
-          return [toSelectableValue('*')];
+          return ['*'];
         }
         if (Array.isArray(response.data) && response.data[0]) {
           return Object.keys(response.data[0]).map((key: string, i: number) => {
-            return toSelectableValue(key);
+            return key;
           });
         }
         if (response.data instanceof Object) {
           return Object.keys(response.data).map((key: string, i: number) => {
-            return toSelectableValue(key);
+            return key;
           });
         }
-        return [toSelectableValue('*')];
+        return ['*'];
       })
-      .then((data: SelectableValue[]) => {
+      .then((data: string[]) => {
         ['avg()', 'min()', 'max()', 'sum()', 'count()'].reverse().forEach((el) => {
-          data.unshift({ label: el, value: el });
+          data.unshift(el);
         });
-        if (addRemove && addRemove !== '' && addRemove !== '*') {
-          data.unshift({ label: 'remove ' + addRemove, value: 'remove', icon: 'trash-alt', title: 'remove' });
-        }
         return data;
-      });
+      })
+      .then(prependDashboardVariables)
+      .then((data) =>
+        data.filter((item) => {
+          return !filter || (item && item.toLowerCase().includes(filter.toLowerCase()));
+        })
+      );
   };
 
   const onValueChange = (key: keyof ThrukQuery, value: any) => {
@@ -113,6 +113,10 @@ export const QueryEditor = (props: Props) => {
   .thruk-dnd-label {
     padding: 0 12px;
     cursor: grab;
+    overflow-y: hidden;
+  }
+  DIV.thruk-dnd-list DIV:first-child LABEL.thruk-dnd-label {
+    padding: 0 12px 0 0;
   }
   .thruk-dnd-label:hover {
     background: lightblue;
@@ -125,42 +129,6 @@ export const QueryEditor = (props: Props) => {
   }
   `;
 
-  // set input field value and emit changed event
-  const inputTypeValue = (inp: HTMLInputElement, value: string) => {
-    // special cases for select * and "+" button
-    if (value === '*' || value === '+') {
-      value = '';
-    }
-    let nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-    if (!nativeInputValueSetter) {
-      inp.value = value;
-      return;
-    }
-    nativeInputValueSetter.call(inp, value);
-
-    const event = new Event('input', { bubbles: true });
-    inp.dispatchEvent(event);
-  };
-
-  let lastInput: HTMLInputElement;
-  // set current value so it can be changed instead of typing it again
-  const makeInputEditable = (value: string, inp?: HTMLInputElement) => {
-    if (inp) {
-      lastInput = inp;
-    } else {
-      inp = lastInput;
-    }
-    if (!inp) {
-      return;
-    }
-    inputTypeValue(inp, value);
-    setTimeout(() => {
-      if (!inp) {
-        return;
-      }
-      inputTypeValue(inp, value);
-    }, 200);
-  };
   let outputRef = useRef(null);
   let copyBtn = useRef(null);
   return (
@@ -170,19 +138,22 @@ export const QueryEditor = (props: Props) => {
         <SegmentSection label="FROM">
           <></>
         </SegmentSection>
-        <AsyncSelectField
-          isClearable
-          value={toSelectableValue(props.query.table || '/')}
-          loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-            return loadTables(filter).then((data) => {
-              makeInputEditable(props.query.table);
-              return data;
-            });
-          }}
+        <Combobox
+          isClearable={true}
+          createCustomValue={true}
+          value={props.query.table || '/'}
           onChange={(v) => {
             onValueChange('table', v !== null ? v.value : '/');
           }}
-          onCreateOption={(customValue) => onValueChange('table', customValue)}
+          options={(filter?: string): Promise<ComboboxOption[]> => {
+            return loadTables(filter).then((data) => {
+              return data.map((item) => {
+                return { value: item };
+              });
+            });
+          }}
+          minWidth={30}
+          maxWidth={300}
           width={'auto'}
         />
         <InlineField grow>
@@ -196,7 +167,12 @@ export const QueryEditor = (props: Props) => {
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="thruk-columns-list" direction="horizontal">
             {(provided, snapshot) => (
-              <div ref={provided.innerRef} style={getListStyle(snapshot.isDraggingOver)} {...provided.droppableProps}>
+              <div
+                ref={provided.innerRef}
+                style={getListStyle(snapshot.isDraggingOver)}
+                {...provided.droppableProps}
+                className="thruk-dnd-list"
+              >
                 {props.query.columns.map((sel, index) => (
                   <Draggable key={'thruk-col' + index} draggableId={'thruk-col' + index} index={index}>
                     {(provided, snapshot) => (
@@ -207,18 +183,21 @@ export const QueryEditor = (props: Props) => {
                         style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                       >
                         <InlineLabel width={'auto'} className="thruk-dnd-label">
-                          <AsyncSelectField
-                            isClearable={false}
-                            key={props.query.table}
-                            value={toSelectableValue(sel || '*')}
-                            loadOptions={(filter?: string): Promise<SelectableValue[]> => {
-                              if (sel !== '*') {
-                                makeInputEditable(sel);
-                              }
-                              return loadColumns(filter, sel);
+                          <Combobox
+                            isClearable={true}
+                            createCustomValue={true}
+                            value={sel || '*'}
+                            options={(filter?: string): Promise<ComboboxOption[]> => {
+                              return loadColumns(filter).then((data) => {
+                                return data.map((item) => {
+                                  return { value: item, label: item };
+                                });
+                              });
                             }}
+                            width={'auto'}
+                            minWidth={5}
                             onChange={(v) => {
-                              if (v.title === 'remove') {
+                              if (v === null) {
                                 // remove segment
                                 props.query.columns.splice(index, 1);
                               } else {
@@ -246,10 +225,16 @@ export const QueryEditor = (props: Props) => {
             )}
           </Droppable>
         </DragDropContext>
-        <AsyncSelectField
-          isClearable={false}
-          value={toSelectableValue('+')}
-          loadOptions={loadColumns}
+        <SegmentAsync
+          value={'+'}
+          style={{ width: 'auto', padding: '0 4px' }}
+          loadOptions={(filter?: string): Promise<SelectableValue[]> => {
+            return loadColumns(filter).then((data) => {
+              return data.map((item) => {
+                return { value: item, label: item };
+              });
+            });
+          }}
           onChange={(v) => {
             props.query.columns.push(v.value);
             // remove '*' from list
@@ -260,6 +245,7 @@ export const QueryEditor = (props: Props) => {
             props.onChange(props.query);
             debouncedRunQuery();
           }}
+          inputMinWidth={200}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
@@ -295,22 +281,28 @@ export const QueryEditor = (props: Props) => {
           type={'number'}
           width={10}
         />
-        <SegmentSection label="AS">
+        <SegmentSection label={(<div style={{ textAlign: 'right', width: '100%' }}>AS</div>) as unknown as string}>
           <></>
         </SegmentSection>
-        <SegmentAsync
-          value={toSelectableValue(props.query.type || 'table')}
-          loadOptions={loadTypes}
+        <Combobox
+          value={props.query.type || 'table'}
+          options={[
+            { label: 'Table', value: 'table' },
+            { label: 'Timeseries', value: 'graph' },
+            { label: 'Logs', value: 'logs' },
+          ]}
           onChange={(v) => {
-            onValueChange('type', v.value);
+            onValueChange('type', v);
           }}
-          allowCustomValue={false}
-          inputMinWidth={80}
+          isClearable={false}
+          createCustomValue={false}
+          width="auto"
+          minWidth={15}
         />
         <InlineField grow>
           <InlineLabel> </InlineLabel>
         </InlineField>
-        <SegmentSection label="Helper">
+        <SegmentSection label={(<div style={{ textAlign: 'right', width: '100%' }}>Helper</div>) as unknown as string}>
           <></>
         </SegmentSection>
         <Input
