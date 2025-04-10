@@ -1,5 +1,9 @@
 ### Changelog
 
+2.2.0  2025-04-10
+    - rework query editor select fields
+    - replace variables in columns
+
 2.1.2  2025-01-15
     - fix remove columns button
     - fix broken query if FROM contains url parameter already
