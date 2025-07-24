@@ -15,6 +15,7 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource } from './datasource';
 import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from './types';
+import styles from './QueryEditor.module.css';
 
 type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
 
@@ -109,31 +110,11 @@ export const QueryEditor = (props: Props) => {
     background: isDragging ? 'lightgreen' : '',
     ...draggableStyle,
   });
-  const css = `
-  .thruk-dnd-label {
-    padding: 0 12px;
-    cursor: grab;
-    overflow-y: hidden;
-  }
-  DIV.thruk-dnd-list DIV:first-child LABEL.thruk-dnd-label {
-    padding: 0 12px 0 0;
-  }
-  .thruk-dnd-label:hover {
-    background: lightblue;
-    cursor: grab;
-  }
-  .thruk-dnd-label LABEL {
-    padding: 0 4px;
-    margin: 0;
-    cursor: text;
-  }
-  `;
 
   let outputRef = useRef(null);
   let copyBtn = useRef(null);
   return (
     <>
-      <style>{css}</style>
       <div className="gf-form">
         <SegmentSection label="FROM">
           <></>
@@ -171,7 +152,7 @@ export const QueryEditor = (props: Props) => {
                 ref={provided.innerRef}
                 style={getListStyle(snapshot.isDraggingOver)}
                 {...provided.droppableProps}
-                className="thruk-dnd-list"
+                className={styles.DNDList}
               >
                 {props.query.columns.map((sel, index) => (
                   <Draggable key={'thruk-col' + index} draggableId={'thruk-col' + index} index={index}>
@@ -182,7 +163,7 @@ export const QueryEditor = (props: Props) => {
                         {...provided.dragHandleProps}
                         style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                       >
-                        <InlineLabel width={'auto'} className="thruk-dnd-label">
+                        <InlineLabel width={'auto'} className={styles.DNDLabel}>
                           <Combobox
                             isClearable={true}
                             createCustomValue={true}
