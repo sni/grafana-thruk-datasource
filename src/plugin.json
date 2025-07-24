@@ -20,7 +20,8 @@
     },
     "links": [
       { "name": "GitHub", "url": "https://github.com/sni/grafana-thruk-datasource" },
-      { "name": "MIT License", "url": "https://github.com/sni/grafana-thruk-datasource/blob/master/LICENSE" }
+      { "name": "MIT License", "url": "https://github.com/sni/grafana-thruk-datasource/blob/master/LICENSE" },
+      { "name": "sponsorship", "url": "https://github.com/sponsors/sni" }
     ],
     "keywords": ["naemon", "nagios", "thruk"],
     "screenshots": [{ "name": "thruk-datasource query editor", "path": "img/screenshot.png" }],
