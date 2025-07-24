@@ -54,7 +54,7 @@ export const QueryEditor = (props: Props) => {
       return Promise.resolve(['*']);
     }
     return props.datasource
-      .request('GET', props.datasource._appendUrlParam(props.query.table, 'limit=1'))
+      .request('GET', props.datasource._appendUrlParam(props.datasource.replaceVariables(props.query.table), 'limit=1'))
       .then((response) => {
         if (!response.data) {
           return ['*'];
