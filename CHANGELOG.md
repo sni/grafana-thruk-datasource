@@ -2,6 +2,7 @@
 
 next:
     - add provisioning to dev container
+    - all querys have a default limit of 1000 unless specified otherwise
     - require grafana 11.6
 
 2.2.0  2025-04-10

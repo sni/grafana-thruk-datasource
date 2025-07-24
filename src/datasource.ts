@@ -20,6 +20,8 @@ import { lastValueFrom, Observable, throwError } from 'rxjs';
 import { ThrukQuery, ThrukDataSourceOptions, defaultQuery, ThrukColumnConfig, ThrukColumnMetaColumn } from './types';
 import { isNumber } from 'lodash';
 
+export const defaultLimit = 1000;
+
 export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions> {
   url?: string;
   basicAuth?: string;
@@ -69,13 +71,13 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     return this.request(
       'GET',
-      query.table +
+        this.replaceVariables(query.table) +
         '?q=' +
         encodeURIComponent(this.replaceVariables(query.condition || '')) +
         '&columns=' +
         encodeURIComponent(this.replaceVariables(query.columns.join(','))) +
         '&limit=' +
-        encodeURIComponent(this.replaceVariables((query.limit > 0 ? query.limit : '').toString()))
+        encodeURIComponent(this.replaceVariables((query.limit > 0 ? query.limit : defaultLimit).toString()))
     ).then((response) => {
       let key = query.columns[0];
       return response.data.map((row: any) => {
@@ -93,7 +95,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     options.targets.map((target) => {
       target = defaults(target, defaultQuery);
       target.table = this.replaceVariables(target.table, undefined, options.scopedVars);
-      target.limit = Number(templateSrv.replace(String(target.limit || '')));
+      target.limit = Number(templateSrv.replace(String(target.limit || defaultLimit)));
     });
 
     options.targets = options.targets.filter((t) => !t.hide);
@@ -115,7 +117,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
       path = this._appendUrlParam(
         path,
-        'limit=' + encodeURIComponent(this.replaceVariables((target.limit > 0 ? target.limit : '').toString()))
+        'limit=' + encodeURIComponent(this.replaceVariables((target.limit > 0 ? target.limit : defaultLimit).toString()))
       );
       if (col.hasColumns) {
         path = path + '&columns=' + encodeURIComponent(this.replaceVariables(col.columns.join(',')));
@@ -322,7 +324,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       table: tmp[2],
       columns: [tmp[1]],
       condition: tmp[4],
-      limit: tmp[6] ? Number(tmp[6]) : 0,
+      limit: Number(tmp[6] || defaultLimit),
       type: 'table',
     } as ThrukQuery;
   }

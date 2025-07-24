@@ -13,7 +13,7 @@ import {
 } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
-import { DataSource } from './datasource';
+import { DataSource, defaultLimit } from './datasource';
 import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from './types';
 import styles from './QueryEditor.module.css';
 
@@ -249,12 +249,12 @@ export const QueryEditor = (props: Props) => {
           <></>
         </SegmentSection>
         <Input
-          placeholder="No Limit"
+          placeholder={defaultLimit.toString()}
           value={props.query.limit?.toString()}
           onChange={(v) => {
             let limit = Number(v.currentTarget.value);
             if (limit <= 0) {
-              onValueChange('limit', undefined);
+              onValueChange('limit', defaultLimit);
             } else {
               onValueChange('limit', limit);
             }
