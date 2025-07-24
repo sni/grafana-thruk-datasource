@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - add provisioning to dev container
+
 2.2.0  2025-04-10
     - rework query editor select fields
     - replace variables in columns
