@@ -72,7 +72,7 @@ export const QueryEditor = (props: Props) => {
         return ['*'];
       })
       .then((data: string[]) => {
-        ['avg()', 'min()', 'max()', 'sum()', 'count()'].reverse().forEach((el) => {
+        ['avg()', 'min()', 'max()', 'sum()', 'count()', 'calc()', 'concat()'].reverse().forEach((el) => {
           data.unshift(el);
         });
         return data;
