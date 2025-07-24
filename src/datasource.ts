@@ -71,7 +71,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     return this.request(
       'GET',
-        this.replaceVariables(query.table) +
+      this.replaceVariables(query.table) +
         '?q=' +
         encodeURIComponent(this.replaceVariables(query.condition || '')) +
         '&columns=' +
@@ -117,7 +117,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
       path = this._appendUrlParam(
         path,
-        'limit=' + encodeURIComponent(this.replaceVariables((target.limit > 0 ? target.limit : defaultLimit).toString()))
+        'limit=' +
+          encodeURIComponent(this.replaceVariables((target.limit > 0 ? target.limit : defaultLimit).toString()))
       );
       if (col.hasColumns) {
         path = path + '&columns=' + encodeURIComponent(this.replaceVariables(col.columns.join(',')));
