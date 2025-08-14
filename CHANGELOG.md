@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - add support for uniq() aggregation function
+
 2.2.1  2025-07-24
     - add provisioning to dev container
     - all querys have a default limit of 1000 unless specified otherwise
