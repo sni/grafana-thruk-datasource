@@ -2,6 +2,7 @@
 
 next:
     - add support for uniq() aggregation function
+    - fix setting limit from variables query
 
 2.2.1  2025-07-24
     - add provisioning to dev container

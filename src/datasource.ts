@@ -68,17 +68,12 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     }
 
     let query = this.parseVariableQuery(this.replaceVariables(query_string));
+    let url = this.replaceVariables(query.table);
+    url += '?q=' + encodeURIComponent(this.replaceVariables(query.condition || ''));
+    url += '&columns=' + encodeURIComponent(this.replaceVariables(query.columns.join(',')));
+    url += '&limit=' + encodeURIComponent(this.replaceVariables((query.limit || defaultLimit).toString()));
 
-    return this.request(
-      'GET',
-      this.replaceVariables(query.table) +
-        '?q=' +
-        encodeURIComponent(this.replaceVariables(query.condition || '')) +
-        '&columns=' +
-        encodeURIComponent(this.replaceVariables(query.columns.join(','))) +
-        '&limit=' +
-        encodeURIComponent(this.replaceVariables((query.limit > 0 ? query.limit : defaultLimit).toString()))
-    ).then((response) => {
+    return this.request('GET', url).then((response) => {
       let key = query.columns[0];
       return response.data.map((row: any) => {
         return { text: row[key], value: row[key] };
@@ -315,12 +310,13 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
   }
 
   parseVariableQuery(query: string): ThrukQuery {
-    let tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*))(|\s+LIMIT\s+(\d+))\s*$/i);
+    let tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*?))(|\s+LIMIT\s+(\d+))\s*$/i);
     if (!tmp) {
       throw new Error(
         'query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>] [LIMIT <limit>]'
       );
     }
+
     return {
       table: tmp[2],
       columns: [tmp[1]],
