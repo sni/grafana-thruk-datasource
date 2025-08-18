@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.2.2  2025-08-18
     - add support for uniq() aggregation function
     - fix setting limit from variables query
 
