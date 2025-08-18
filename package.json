@@ -22,7 +22,8 @@
     "server": "docker-compose up --build",
     "sign": "npx --yes @grafana/sign-plugin@latest",
     "start": "yarn watch",
-    "test": "jest --watch --onlyChanged",
+    "test": "jest",
+    "test:watch": "jest --watch --onlyChanged",
     "test:ci": "jest --passWithNoTests --maxWorkers 4",
     "typecheck": "tsc --noEmit"
   },

@@ -44,7 +44,10 @@ prettiercheck:
 buildshell:
 	$(DOCKER) -i --name $(PLUGINNAME)-buildshell   node:$(NODEVERSION) bash
 
-test: build prettiercheck
+jesttest:
+	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) npx jest test
+
+test: build prettiercheck jesttest
 
 # start a specific grafana version like:
 # GRAFANA_VERSION=11.0.0 make dev
