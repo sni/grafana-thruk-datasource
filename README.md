@@ -26,7 +26,7 @@ Add a new datasource and select:
 Use the Grafana proxy.
 
 - Type 'Thruk'
-- Url to Thruk, ex.: 'https://localhost/sitename/thruk'
+- Url to Thruk, ex.: <https://localhost/sitename/thruk>
 
 ## Table Queries
 
@@ -111,18 +111,18 @@ following command (in the source directory of this plugin):
 This will start a grafana container and a build watcher which updates the
 plugin is the dist/ folder.
 
-The dev instance can be accessed at `http://localhost:3000``
+The dev instance can be accessed at <http://localhost:3000>
 
 Note: You need to add the datasource manually and you need to run "make build" once
   before starting the dev container, otherwise Grafana won't find the datasource.
 
-The grafana widget documentation is available here: https://developers.grafana.com/ui/latest/
+The grafana widget documentation is available here: <https://developers.grafana.com/ui/latest/>
 
 ### Testing
 
 For testing you can use the demo Thruk instance at:
 
-- URL: https://demo.thruk.org/demo/thruk/
+- URL: <https://demo.thruk.org/demo/thruk/>
 - Basic Auth: test / test
 
 ### Create Release
