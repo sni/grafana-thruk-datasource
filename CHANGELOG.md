@@ -1,6 +1,6 @@
 ### Changelog
 
-next
+2.2.3  2025-09-24
     - cache columns and tables in the query builder
 
 2.2.2  2025-08-18
