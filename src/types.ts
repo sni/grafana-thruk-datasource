@@ -1,4 +1,5 @@
-import { DataQuery, DataSourceJsonData, FieldSchema } from '@grafana/data';
+import { DataSourceJsonData, FieldSchema } from '@grafana/data';
+import { DataQuery } from '@grafana/schema';
 
 export interface ThrukQuery extends DataQuery {
   table: string;

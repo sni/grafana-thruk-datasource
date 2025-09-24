@@ -28,6 +28,12 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
   withCredentials?: boolean;
   isProxyAccess: boolean;
 
+  cachedColumns?: {
+    url: string;
+    columns: string[];
+  };
+  cachedTables?: string[];
+
   constructor(instanceSettings: DataSourceInstanceSettings<ThrukDataSourceOptions>) {
     super(instanceSettings);
 
@@ -176,7 +182,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           metaColumns[column.name] = column;
           fields[i].name = column.name;
           if (column.type) {
-            fields[i].type = this.str2fieldtype(column.type);
+            fields[i].type = this.str2fieldType(column.type);
           }
           if (column.config) {
             fields[i].config = column.config as FieldConfig;
@@ -240,13 +246,13 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
    */
   buildField(key: string, type?: FieldType | string, config?: FieldConfig): FieldSchema {
     if (type !== undefined) {
-      let ftype = FieldType.string;
+      let fType = FieldType.string;
       if (typeof type === 'string') {
-        ftype = this.str2fieldtype(type);
+        fType = this.str2fieldType(type);
       }
-      return { name: key, type: ftype, config: config };
+      return { name: key, type: fType, config: config };
     }
-    // seconds (from availabilty checks)
+    // seconds (from availability checks)
     if (key.match(/time_(down|up|unreachable|indeterminate|ok|warn|unknown|critical)/)) {
       return { name: key, type: FieldType.number, config: { unit: 's' } };
     }
@@ -257,7 +263,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     return { name: key, type: FieldType.string };
   }
 
-  str2fieldtype(str: string): FieldType {
+  str2fieldType(str: string): FieldType {
     switch (str) {
       case 'number':
         return FieldType.number;
@@ -284,10 +290,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       let matches = str.match(/(\w+)\s*=\s*\$time/);
       if (matches && matches[1]) {
         let field = matches[1];
-        let timefilter = '(' + field + ' > ' + Math.floor(range.from.toDate().getTime() / 1000);
-        timefilter += ' AND ' + field + ' < ' + Math.floor(range.to.toDate().getTime() / 1000);
-        timefilter += ')';
-        str = str.replace(matches[0], timefilter);
+        let timeFilter = '(' + field + ' > ' + Math.floor(range.from.toDate().getTime() / 1000);
+        timeFilter += ' AND ' + field + ' < ' + Math.floor(range.to.toDate().getTime() / 1000);
+        timeFilter += ')';
+        str = str.replace(matches[0], timeFilter);
       }
     }
 
@@ -336,7 +342,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         }
       }
 
-      // pass throught thruk errors
+      // pass through thruk errors
       if (resultData && resultData.message && resultData.code && resultData.code >= 400) {
         let description = resultData.description;
         if (description) {

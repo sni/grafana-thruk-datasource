@@ -34,12 +34,42 @@ export const QueryEditor = (props: Props) => {
   };
 
   const loadTables = (filter?: string): Promise<string[]> => {
+    return fetchTablesCached()
+      .then(prependDashboardVariables)
+      .then((data) =>
+        data.filter((item) => {
+          return !filter || (item && item.toLowerCase().includes(filter.toLowerCase()));
+        })
+      );
+  };
+
+  const fetchTablesCached = (): Promise<string[]> => {
+    if (props.datasource.cachedTables && props.datasource.cachedTables.length > 0) {
+      return Promise.resolve(props.datasource.cachedTables.slice());
+    }
     return props.datasource
       .request('GET', '/index?columns=url&protocol=get')
       .then((response) => {
         return response.data.map((row: { url?: string }) => {
           return row.url;
         });
+      })
+      .then((response) => {
+        props.datasource.cachedTables = response.slice();
+        return response;
+      });
+  };
+
+  const loadColumns = (filter?: string): Promise<string[]> => {
+    if (!props.query.table) {
+      return Promise.resolve(['*']);
+    }
+    return fetchColumnsCached()
+      .then((data: string[]) => {
+        ['avg()', 'min()', 'max()', 'sum()', 'count()', 'calc()', 'concat()', 'uniq()'].reverse().forEach((el) => {
+          data.unshift(el);
+        });
+        return data;
       })
       .then(prependDashboardVariables)
       .then((data) =>
@@ -49,12 +79,13 @@ export const QueryEditor = (props: Props) => {
       );
   };
 
-  const loadColumns = (filter?: string): Promise<string[]> => {
-    if (!props.query.table) {
-      return Promise.resolve(['*']);
+  const fetchColumnsCached = (): Promise<string[]> => {
+    const url = props.datasource.replaceVariables(props.query.table);
+    if (props.datasource.cachedColumns && props.datasource.cachedColumns.url === url) {
+      return Promise.resolve(props.datasource.cachedColumns.columns.slice());
     }
     return props.datasource
-      .request('GET', props.datasource._appendUrlParam(props.datasource.replaceVariables(props.query.table), 'limit=1'))
+      .request('GET', props.datasource._appendUrlParam(url, 'limit=1'), null, { 'x-thruk-columns': true })
       .then((response) => {
         if (!response.data) {
           return ['*'];
@@ -71,18 +102,13 @@ export const QueryEditor = (props: Props) => {
         }
         return ['*'];
       })
-      .then((data: string[]) => {
-        ['avg()', 'min()', 'max()', 'sum()', 'count()', 'calc()', 'concat()', 'uniq()'].reverse().forEach((el) => {
-          data.unshift(el);
-        });
-        return data;
-      })
-      .then(prependDashboardVariables)
-      .then((data) =>
-        data.filter((item) => {
-          return !filter || (item && item.toLowerCase().includes(filter.toLowerCase()));
-        })
-      );
+      .then((response) => {
+        props.datasource.cachedColumns = {
+          url: url,
+          columns: response.slice(),
+        };
+        return response;
+      });
   };
 
   const onValueChange = (key: keyof ThrukQuery, value: any) => {
