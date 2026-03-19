@@ -1,5 +1,5 @@
 import { defaults, debounce } from 'lodash';
-import React, { useMemo, useRef } from 'react';
+import React, { useRef } from 'react';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 import {
   SegmentSection,
@@ -21,8 +21,14 @@ type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
 
 export const QueryEditor = (props: Props) => {
   const { onRunQuery } = props;
-  const debouncedRunQuery = useMemo(() => debounce(onRunQuery, 500), [onRunQuery]);
-  props.query = defaults(props.query, defaultQuery);
+  const debouncedRunQuery = React.useMemo(
+    () => debounce(onRunQuery, 500), [onRunQuery]
+  );
+
+  const queryDefaulted = React.useMemo(() => {
+    // lodash.defaults modifies the first object. Pass an empty one to avoid modifying props.query
+    return defaults({}, props.query, defaultQuery);
+  }, [props.query]);
 
   const prependDashboardVariables = (data: string[]) => {
     getTemplateSrv()
@@ -61,7 +67,7 @@ export const QueryEditor = (props: Props) => {
   };
 
   const loadColumns = (filter?: string): Promise<string[]> => {
-    if (!props.query.table) {
+    if (queryDefaulted.table) {
       return Promise.resolve(['*']);
     }
     return fetchColumnsCached()
@@ -80,7 +86,7 @@ export const QueryEditor = (props: Props) => {
   };
 
   const fetchColumnsCached = (): Promise<string[]> => {
-    const url = props.datasource.replaceVariables(props.query.table);
+    const url = props.datasource.replaceVariables(queryDefaulted.table);
     if (props.datasource.cachedColumns && props.datasource.cachedColumns.url === url) {
       return Promise.resolve(props.datasource.cachedColumns.columns.slice());
     }
@@ -112,8 +118,11 @@ export const QueryEditor = (props: Props) => {
   };
 
   const onValueChange = (key: keyof ThrukQuery, value: any) => {
-    props.query[key] = value as never;
-    props.onChange(props.query);
+    const updatedQuery = {
+      ...queryDefaulted,
+      [key]: value
+    };
+    props.onChange(updatedQuery);
     debouncedRunQuery();
   };
 
@@ -121,9 +130,15 @@ export const QueryEditor = (props: Props) => {
     if (!result.destination) {
       return;
     }
-    const [removed] = props.query.columns.splice(result.source.index, 1);
-    props.query.columns.splice(result.destination.index, 0, removed);
-    props.onChange(props.query);
+    const newColumns = Array.from(queryDefaulted.columns)
+    const [removed] = newColumns.splice(result.source.index, 1);
+    newColumns.splice(result.destination.index, 0, removed);
+    props.onChange(
+      {
+        ...queryDefaulted,
+        columns: newColumns,
+      }
+    );
     debouncedRunQuery();
   };
   const getListStyle = (isDraggingOver: boolean) => ({
@@ -148,7 +163,7 @@ export const QueryEditor = (props: Props) => {
         <Combobox
           isClearable={true}
           createCustomValue={true}
-          value={props.query.table || '/'}
+          value={queryDefaulted.table || '/'}
           onChange={(v) => {
             onValueChange('table', v !== null ? v.value : '/');
           }}
@@ -180,7 +195,7 @@ export const QueryEditor = (props: Props) => {
                 {...provided.droppableProps}
                 className={styles.DNDList}
               >
-                {props.query.columns.map((sel, index) => (
+                {queryDefaulted.columns.map((sel, index) => (
                   <Draggable key={'thruk-col' + index} draggableId={'thruk-col' + index} index={index}>
                     {(provided, snapshot) => (
                       <div
@@ -206,19 +221,19 @@ export const QueryEditor = (props: Props) => {
                             onChange={(v) => {
                               if (v === null) {
                                 // remove segment
-                                props.query.columns.splice(index, 1);
+                                queryDefaulted.columns.splice(index, 1);
                               } else {
-                                props.query.columns[index] = v.value;
+                                queryDefaulted.columns[index] = v.value;
                               }
                               // remove '*' from list
-                              let i = props.query.columns.indexOf('*');
+                              let i = queryDefaulted.columns.indexOf('*');
                               if (i !== -1) {
-                                props.query.columns.splice(i, 1);
+                                queryDefaulted.columns.splice(i, 1);
                               }
-                              if (props.query.columns.length === 0) {
-                                props.query.columns.push('*');
+                              if (queryDefaulted.columns.length === 0) {
+                                queryDefaulted.columns.push('*');
                               }
-                              props.onChange(props.query);
+                              props.onChange(queryDefaulted);
                               debouncedRunQuery();
                             }}
                           />
@@ -243,13 +258,13 @@ export const QueryEditor = (props: Props) => {
             });
           }}
           onChange={(v) => {
-            props.query.columns.push(v.value);
+            queryDefaulted.columns.push(v.value);
             // remove '*' from list
-            let i = props.query.columns.indexOf('*');
+            let i = queryDefaulted.columns.indexOf('*');
             if (i !== -1) {
-              props.query.columns.splice(i, 1);
+              queryDefaulted.columns.splice(i, 1);
             }
-            props.onChange(props.query);
+            props.onChange(queryDefaulted);
             debouncedRunQuery();
           }}
           inputMinWidth={200}
@@ -264,7 +279,7 @@ export const QueryEditor = (props: Props) => {
         </SegmentSection>
         <Input
           placeholder="condition..., ex.: ( host_name = '$host' OR host_alias ~ '^a' ) AND time = $time"
-          value={props.query.condition?.toString()}
+          value={queryDefaulted.condition?.toString()}
           onChange={(v) => {
             onValueChange('condition', v.currentTarget.value);
           }}
@@ -276,7 +291,7 @@ export const QueryEditor = (props: Props) => {
         </SegmentSection>
         <Input
           placeholder={defaultLimit.toString()}
-          value={props.query.limit?.toString()}
+          value={queryDefaulted.limit?.toString()}
           onChange={(v) => {
             let limit = Number(v.currentTarget.value);
             if (limit <= 0) {
@@ -292,7 +307,7 @@ export const QueryEditor = (props: Props) => {
           <></>
         </SegmentSection>
         <Combobox
-          value={props.query.type || 'table'}
+          value={queryDefaulted.type || 'table'}
           options={[
             { label: 'Table', value: 'table' },
             { label: 'Timeseries', value: 'graph' },
