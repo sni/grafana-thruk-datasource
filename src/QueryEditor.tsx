@@ -21,9 +21,7 @@ type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
 
 export const QueryEditor = (props: Props) => {
   const { onRunQuery } = props;
-  const debouncedRunQuery = React.useMemo(
-    () => debounce(onRunQuery, 500), [onRunQuery]
-  );
+  const debouncedRunQuery = React.useMemo(() => debounce(onRunQuery, 500), [onRunQuery]);
 
   const queryDefaulted = React.useMemo(() => {
     // lodash.defaults modifies the first object. Pass an empty one to avoid modifying props.query
@@ -120,7 +118,7 @@ export const QueryEditor = (props: Props) => {
   const onValueChange = (key: keyof ThrukQuery, value: any) => {
     const updatedQuery = {
       ...queryDefaulted,
-      [key]: value
+      [key]: value,
     };
     props.onChange(updatedQuery);
     debouncedRunQuery();
@@ -130,15 +128,13 @@ export const QueryEditor = (props: Props) => {
     if (!result.destination) {
       return;
     }
-    const newColumns = Array.from(queryDefaulted.columns)
+    const newColumns = Array.from(queryDefaulted.columns);
     const [removed] = newColumns.splice(result.source.index, 1);
     newColumns.splice(result.destination.index, 0, removed);
-    props.onChange(
-      {
-        ...queryDefaulted,
-        columns: newColumns,
-      }
-    );
+    props.onChange({
+      ...queryDefaulted,
+      columns: newColumns,
+    });
     debouncedRunQuery();
   };
   const getListStyle = (isDraggingOver: boolean) => ({

@@ -15,9 +15,9 @@ export class ConfigEditor extends React.PureComponent<Props, State> {
       ...options,
       jsonData: {
         ...options.jsonData,
-        keepCookies: options.jsonData.keepCookies || ['thruk_auth']
-      }
-    }
+        keepCookies: options.jsonData.keepCookies || ['thruk_auth'],
+      },
+    };
 
     return (
       <div className="gf-form-group">
