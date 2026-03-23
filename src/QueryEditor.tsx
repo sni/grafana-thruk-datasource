@@ -23,10 +23,7 @@ export const QueryEditor = (props: Props) => {
   const { onRunQuery } = props;
   const debouncedRunQuery = React.useMemo(() => debounce(onRunQuery, 500), [onRunQuery]);
 
-  const queryDefaulted = React.useMemo(() => {
-    // lodash.defaults modifies the first object. Pass an empty one to avoid modifying props.query
-    return defaults({}, props.query, defaultQuery);
-  }, [props.query]);
+  const queryDefaulted = defaults({}, props.query, defaultQuery);
 
   const prependDashboardVariables = (data: string[]) => {
     getTemplateSrv()
@@ -65,7 +62,7 @@ export const QueryEditor = (props: Props) => {
   };
 
   const loadColumns = (filter?: string): Promise<string[]> => {
-    if (queryDefaulted.table) {
+    if (!queryDefaulted.table) {
       return Promise.resolve(['*']);
     }
     return fetchColumnsCached()
@@ -118,7 +115,7 @@ export const QueryEditor = (props: Props) => {
   const onValueChange = (key: keyof ThrukQuery, value: any) => {
     const updatedQuery = {
       ...queryDefaulted,
-      [key]: value,
+      [key]: value as never,
     };
     props.onChange(updatedQuery);
     debouncedRunQuery();
