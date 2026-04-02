@@ -8,7 +8,7 @@ DOCKER=docker run \
 		-u $(shell id -u):$(shell id -g) \
 		-e "HOME=/src" \
 		-e "GRAFANA_ACCESS_POLICY_TOKEN=$(GRAFANA_ACCESS_POLICY_TOKEN)"
-NODEVERSION=20
+NODEVERSION=24
 export NODE_PATH=$(shell pwd)/node_modules
 YARN=yarn
 SHELL=bash
