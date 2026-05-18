@@ -36,4 +36,10 @@ export default defineConfig([
     ],
   },
   ...baseConfig,
+  {
+    files: ['src/**/*.{ts,tsx}'],
+    rules: {
+      '@react/react-in-jsx-scope': 'off',
+    }
+  }
 ]);

@@ -13,8 +13,8 @@ import {
 } from '@grafana/ui';
 import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
-import { DataSource, defaultLimit } from './datasource';
-import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from './types';
+import { DataSource, defaultLimit } from '../datasource';
+import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from '../types';
 import styles from './QueryEditor.module.css';
 
 type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
