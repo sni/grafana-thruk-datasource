@@ -8,3 +8,4 @@ dist/
 .bash_history
 .cache/
 .eslintcache
+logs/
