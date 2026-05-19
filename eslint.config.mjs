@@ -40,6 +40,7 @@ export default defineConfig([
     files: ['src/**/*.{ts,tsx}'],
     rules: {
       '@react/react-in-jsx-scope': 'off',
+      '@typescript-eslint/no-unused-vars': "off",
     }
   }
 ]);
