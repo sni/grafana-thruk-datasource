@@ -23,6 +23,9 @@ export const QueryEditor = (props: Props) => {
 
   const queryDefaulted = defaults({}, props.query, defaultQuery);
 
+  const tablesCache = useRef<string[] | null>(null);
+  const columnsCache = useRef<{ url: string; columns: string[] } | null>(null);
+
   const prependDashboardVariables = (data: string[]) => {
     getTemplateSrv()
       .getVariables()
@@ -32,28 +35,57 @@ export const QueryEditor = (props: Props) => {
     return data;
   };
 
+  const fetchTables = (): Promise<string[]> => {
+    if (tablesCache.current && tablesCache.current.length > 0) {
+      return Promise.resolve(tablesCache.current.slice());
+    }
+    return props.datasource
+      .getResource('tables')
+      .then((response: any) => {
+        const urls = response.data.map((row: { url?: string }) => row.url);
+        tablesCache.current = urls.slice();
+        return urls;
+      })
+      .catch((err: any) => {
+        console.warn('failed to fetch tables', err);
+        return [];
+      });
+  };
+
   const loadTables = (filter?: string): Promise<string[]> => {
-    return fetchTablesCached()
+    return fetchTables()
       .then(prependDashboardVariables)
       .then((data) =>
         data.filter((item) => !filter || (item && item.toLowerCase().includes(filter.toLowerCase())))
       );
   };
 
-  const fetchTablesCached = (): Promise<string[]> => {
-    if (props.datasource.cachedTables && props.datasource.cachedTables.length > 0) {
-      return Promise.resolve(props.datasource.cachedTables.slice());
+  const fetchColumns = (): Promise<string[]> => {
+    const url = props.datasource.replaceVariables(queryDefaulted.table);
+    if (columnsCache.current && columnsCache.current.url === url) {
+      return Promise.resolve(columnsCache.current.columns.slice());
     }
     return props.datasource
-      .request('GET', '/index?columns=url&protocol=get')
-      .then((response) => {
-        return response.data.map((row: { url?: string }) => {
-          return row.url;
-        });
+      .getResource('columns', { table: url })
+      .then((response: any) => {
+        if (!response.data) {
+          return ['*'];
+        }
+        if (Array.isArray(response.data) && response.data[0]) {
+          const cols = Object.keys(response.data[0]);
+          columnsCache.current = { url, columns: cols.slice() };
+          return cols;
+        }
+        if (response.data instanceof Object) {
+          const cols = Object.keys(response.data);
+          columnsCache.current = { url, columns: cols.slice() };
+          return cols;
+        }
+        return ['*'];
       })
-      .then((response) => {
-        props.datasource.cachedTables = response.slice();
-        return response;
+      .catch((err: any) => {
+        console.warn('failed to fetch columns', err);
+        return ['*'];
       });
   };
 
@@ -61,7 +93,7 @@ export const QueryEditor = (props: Props) => {
     if (!queryDefaulted.table) {
       return Promise.resolve(['*']);
     }
-    return fetchColumnsCached()
+    return fetchColumns()
       .then((data: string[]) => {
         ['avg()', 'min()', 'max()', 'sum()', 'count()', 'calc()', 'concat()', 'uniq()'].reverse().forEach((el) => {
           data.unshift(el);
@@ -72,38 +104,6 @@ export const QueryEditor = (props: Props) => {
       .then((data) =>
         data.filter((item) => !filter || (item && item.toLowerCase().includes(filter.toLowerCase())))
       );
-  };
-
-  const fetchColumnsCached = (): Promise<string[]> => {
-    const url = props.datasource.replaceVariables(queryDefaulted.table);
-    if (props.datasource.cachedColumns && props.datasource.cachedColumns.url === url) {
-      return Promise.resolve(props.datasource.cachedColumns.columns.slice());
-    }
-    return props.datasource
-      .request('GET', props.datasource._appendUrlParam(url, 'limit=1'), null, { 'x-thruk-columns': true })
-      .then((response) => {
-        if (!response.data) {
-          return ['*'];
-        }
-        if (Array.isArray(response.data) && response.data[0]) {
-          return Object.keys(response.data[0]).map((key: string, i: number) => {
-            return key;
-          });
-        }
-        if (response.data instanceof Object) {
-          return Object.keys(response.data).map((key: string, i: number) => {
-            return key;
-          });
-        }
-        return ['*'];
-      })
-      .then((response) => {
-        props.datasource.cachedColumns = {
-          url: url,
-          columns: response.slice(),
-        };
-        return response;
-      });
   };
 
   const onValueChange = (key: keyof ThrukQuery, value: any) => {
