@@ -3,9 +3,9 @@ package main
 import (
 	"os"
 
-	"github.com/consolmonitoring/thruk-datasource/pkg/plugin"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/datasource"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/log"
+	"github.com/sni/thruk-datasource/pkg/plugin"
 )
 
 func main() {

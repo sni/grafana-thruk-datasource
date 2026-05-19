@@ -1,4 +1,4 @@
-module github.com/consolmonitoring/thruk-datasource
+module github.com/sni/thruk-datasource
 
 go 1.25.7
 
