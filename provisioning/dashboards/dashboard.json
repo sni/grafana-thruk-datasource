@@ -18,13 +18,12 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": 1,
   "links": [],
   "panels": [
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -131,13 +130,14 @@
           "fields": "",
           "values": true
         },
+        "sort": "desc",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
@@ -158,7 +158,7 @@
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -239,13 +239,14 @@
           "fields": "",
           "values": true
         },
+        "sort": "desc",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
@@ -278,9 +279,8 @@
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "color": {
@@ -319,13 +319,14 @@
           "fields": "",
           "values": false
         },
+        "sort": "desc",
         "tooltip": {
           "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
@@ -337,7 +338,7 @@
           "condition": "name=\"naemon0\"",
           "datasource": {
             "type": "sni-thruk-datasource",
-            "uid": "0uW5UqHVk"
+            "uid": "sni-thruk-datasource"
           },
           "limit": 1,
           "refId": "A",
@@ -348,15 +349,14 @@
           }
         }
       ],
-      "title": "Services Overview",
+      "title": "/hosts name=naemon0",
       "type": "piechart"
     },
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -364,7 +364,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -398,7 +399,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
@@ -408,7 +409,7 @@
           "condition": "",
           "datasource": {
             "type": "sni-thruk-datasource",
-            "uid": "0uW5UqHVk"
+            "uid": "sni-thruk-datasource"
           },
           "refId": "A",
           "table": "/hosts",
@@ -421,9 +422,8 @@
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
-      "description": "",
       "fieldConfig": {
         "defaults": {
           "mappings": [],
@@ -431,7 +431,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -467,7 +468,7 @@
         "textMode": "auto",
         "wideLayout": true
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
@@ -476,7 +477,7 @@
           "condition": "",
           "datasource": {
             "type": "sni-thruk-datasource",
-            "uid": "0uW5UqHVk"
+            "uid": "sni-thruk-datasource"
           },
           "refId": "A",
           "table": "/hosts",
@@ -489,7 +490,7 @@
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -501,6 +502,9 @@
             "cellOptions": {
               "type": "auto"
             },
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -508,7 +512,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -563,17 +568,9 @@
       "id": 7,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "showHeader": true
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
@@ -587,13 +584,13 @@
           "type": "table"
         }
       ],
-      "title": "Table Data",
+      "title": "/services",
       "type": "table"
     },
     {
       "datasource": {
         "type": "sni-thruk-datasource",
-        "uid": "YY612D36314EF4CF4"
+        "uid": "sni-thruk-datasource"
       },
       "fieldConfig": {
         "defaults": {
@@ -605,6 +602,9 @@
             "cellOptions": {
               "type": "auto"
             },
+            "footer": {
+              "reducers": []
+            },
             "inspect": false
           },
           "mappings": [],
@@ -612,7 +612,8 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "green"
+                "color": "green",
+                "value": 0
               },
               {
                 "color": "red",
@@ -621,7 +622,20 @@
             ]
           }
         },
-        "overrides": []
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "type"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 362
+              }
+            ]
+          }
+        ]
       },
       "gridPos": {
         "h": 9,
@@ -632,38 +646,31 @@
       "id": 11,
       "options": {
         "cellHeight": "sm",
-        "footer": {
-          "countRows": false,
-          "fields": "",
-          "reducer": [
-            "sum"
-          ],
-          "show": false
-        },
         "showHeader": true
       },
-      "pluginVersion": "11.6.0",
+      "pluginVersion": "12.4.0",
       "targets": [
         {
           "columns": [
+            "type",
             "message"
           ],
           "condition": "time = $time",
           "datasource": {
             "type": "sni-thruk-datasource",
-            "uid": "0uW5UqHVk"
+            "uid": "sni-thruk-datasource"
           },
           "refId": "A",
           "table": "/notifications",
           "type": "table"
         }
       ],
-      "title": "Panel Title",
+      "title": "/notifications",
       "type": "table"
     }
   ],
   "preload": false,
-  "schemaVersion": 41,
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": [
@@ -674,7 +681,7 @@
         },
         "datasource": {
           "type": "sni-thruk-datasource",
-          "uid": "YY612D36314EF4CF4"
+          "uid": "sni-thruk-datasource"
         },
         "definition": "SELECT name FROM hosts",
         "description": "",
@@ -684,6 +691,7 @@
         "query": "SELECT name FROM hosts",
         "refresh": 1,
         "regex": "",
+        "regexApplyTo": "value",
         "type": "query"
       },
       {
@@ -693,7 +701,7 @@
         },
         "datasource": {
           "type": "sni-thruk-datasource",
-          "uid": "YY612D36314EF4CF4"
+          "uid": "sni-thruk-datasource"
         },
         "definition": "SELECT id FROM sites",
         "description": "",
@@ -703,6 +711,7 @@
         "query": "SELECT id FROM sites",
         "refresh": 1,
         "regex": "",
+        "regexApplyTo": "value",
         "type": "query"
       }
     ]
@@ -715,5 +724,6 @@
   "timezone": "browser",
   "title": "Thruk Test Dashboard",
   "uid": "fesvkq3pxdo1sc",
-  "version": 1
+  "version": 1,
+  "weekStart": ""
 }

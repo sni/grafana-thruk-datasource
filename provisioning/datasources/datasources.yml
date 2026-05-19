@@ -2,7 +2,9 @@ apiVersion: 1
 
 datasources:
   - name: 'thruk-datasource'
+    uid: 'sni-thruk-datasource'
     type: 'sni-thruk-datasource'
+    url: 'https://demo.thruk.org/demo/thruk'
     access: proxy
     isDefault: false
     orgId: 1
