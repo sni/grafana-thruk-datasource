@@ -15,8 +15,6 @@ import { QueryEditorProps, SelectableValue } from '@grafana/data';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataSource, defaultLimit } from '../datasource';
 import { ThrukDataSourceOptions, ThrukQuery, defaultQuery } from '../types';
-import styles from './QueryEditor.module.css';
-
 type Props = QueryEditorProps<DataSource, ThrukQuery, ThrukDataSourceOptions>;
 
 export const QueryEditor = (props: Props) => {
@@ -28,7 +26,7 @@ export const QueryEditor = (props: Props) => {
   const prependDashboardVariables = (data: string[]) => {
     getTemplateSrv()
       .getVariables()
-      .forEach((v, i) => {
+      .forEach((v) => {
         data.unshift('/^$' + v.name + '$/');
       });
     return data;
@@ -38,9 +36,7 @@ export const QueryEditor = (props: Props) => {
     return fetchTablesCached()
       .then(prependDashboardVariables)
       .then((data) =>
-        data.filter((item) => {
-          return !filter || (item && item.toLowerCase().includes(filter.toLowerCase()));
-        })
+        data.filter((item) => !filter || (item && item.toLowerCase().includes(filter.toLowerCase())))
       );
   };
 
@@ -74,9 +70,7 @@ export const QueryEditor = (props: Props) => {
       })
       .then(prependDashboardVariables)
       .then((data) =>
-        data.filter((item) => {
-          return !filter || (item && item.toLowerCase().includes(filter.toLowerCase()));
-        })
+        data.filter((item) => !filter || (item && item.toLowerCase().includes(filter.toLowerCase())))
       );
   };
 
@@ -134,19 +128,23 @@ export const QueryEditor = (props: Props) => {
     });
     debouncedRunQuery();
   };
+
   const getListStyle = (isDraggingOver: boolean) => ({
     background: isDraggingOver ? 'lightblue' : '',
-    display: 'flex',
-    overflow: 'auto',
+    display: 'flex' as const,
+    overflow: 'auto' as const,
+    padding: '0 12px',
   });
+
   const getItemStyle = (isDragging: boolean, draggableStyle: any) => ({
-    userSelect: 'none',
+    userSelect: 'none' as const,
     background: isDragging ? 'lightgreen' : '',
     ...draggableStyle,
   });
 
-  let outputRef = useRef(null);
-  let copyBtn = useRef(null);
+  const outputRef = useRef<HTMLInputElement>(null);
+  const copyBtn = useRef<HTMLButtonElement>(null);
+
   return (
     <>
       <div className="gf-form">
@@ -162,9 +160,7 @@ export const QueryEditor = (props: Props) => {
           }}
           options={(filter?: string): Promise<ComboboxOption[]> => {
             return loadTables(filter).then((data) => {
-              return data.map((item) => {
-                return { value: item };
-              });
+              return data.map((item) => ({ value: item }));
             });
           }}
           minWidth={30}
@@ -186,7 +182,6 @@ export const QueryEditor = (props: Props) => {
                 ref={provided.innerRef}
                 style={getListStyle(snapshot.isDraggingOver)}
                 {...provided.droppableProps}
-                className={styles.DNDList}
               >
                 {queryDefaulted.columns.map((sel, index) => (
                   <Draggable key={'thruk-col' + index} draggableId={'thruk-col' + index} index={index}>
@@ -197,28 +192,24 @@ export const QueryEditor = (props: Props) => {
                         {...provided.dragHandleProps}
                         style={getItemStyle(snapshot.isDragging, provided.draggableProps.style)}
                       >
-                        <InlineLabel width={'auto'} className={styles.DNDLabel}>
+                        <InlineLabel width={'auto'}>
                           <Combobox
                             isClearable={true}
                             createCustomValue={true}
                             value={sel || '*'}
                             options={(filter?: string): Promise<ComboboxOption[]> => {
                               return loadColumns(filter).then((data) => {
-                                return data.map((item) => {
-                                  return { value: item, label: item };
-                                });
+                                return data.map((item) => ({ value: item, label: item }));
                               });
                             }}
                             width={'auto'}
                             minWidth={5}
                             onChange={(v) => {
                               if (v === null) {
-                                // remove segment
                                 queryDefaulted.columns.splice(index, 1);
                               } else {
                                 queryDefaulted.columns[index] = v.value;
                               }
-                              // remove '*' from list
                               let i = queryDefaulted.columns.indexOf('*');
                               if (i !== -1) {
                                 queryDefaulted.columns.splice(i, 1);
@@ -245,15 +236,12 @@ export const QueryEditor = (props: Props) => {
           style={{ width: 'auto', padding: '0 4px' }}
           loadOptions={(filter?: string): Promise<SelectableValue[]> => {
             return loadColumns(filter).then((data) => {
-              return data.map((item) => {
-                return { value: item, label: item };
-              });
+              return data.map((item) => ({ value: item, label: item }));
             });
           }}
           onChange={(v) => {
-            queryDefaulted.columns.push(v.value);
-            // remove '*' from list
-            let i = queryDefaulted.columns.indexOf('*');
+            queryDefaulted.columns.push(v.value!);
+            const i = queryDefaulted.columns.indexOf('*');
             if (i !== -1) {
               queryDefaulted.columns.splice(i, 1);
             }
@@ -286,7 +274,7 @@ export const QueryEditor = (props: Props) => {
           placeholder={defaultLimit.toString()}
           value={queryDefaulted.limit?.toString()}
           onChange={(v) => {
-            let limit = Number(v.currentTarget.value);
+            const limit = Number(v.currentTarget.value);
             if (limit <= 0) {
               onValueChange('limit', defaultLimit);
             } else {
@@ -325,10 +313,7 @@ export const QueryEditor = (props: Props) => {
           placeholder="url encode text"
           onChange={(v) => {
             if (outputRef.current) {
-              if ((outputRef.current as any) instanceof HTMLInputElement) {
-                let inp = outputRef.current as HTMLInputElement;
-                inp.value = encodeURIComponent(v.currentTarget.value);
-              }
+              outputRef.current.value = encodeURIComponent(v.currentTarget.value);
             }
           }}
         />
@@ -340,28 +325,22 @@ export const QueryEditor = (props: Props) => {
           variant="secondary"
           tooltip="Copy encoded text to clipboard"
           style={{ padding: '6px', borderRadius: '4px' }}
-          onClick={(e) => {
+          onClick={() => {
             if (outputRef.current) {
-              if ((outputRef.current as any) instanceof HTMLInputElement) {
-                let inp = outputRef.current as HTMLInputElement;
-                try {
-                  if (navigator.clipboard) {
-                    navigator.clipboard.writeText(inp.value);
-                  }
+              try {
+                navigator.clipboard?.writeText(outputRef.current.value);
+              } catch (e) {
+                console.warn(e);
+              }
+              if (copyBtn.current) {
+                copyBtn.current.style.transition = '';
+                copyBtn.current.style.backgroundColor = '#00b500';
+                setTimeout(() => {
                   if (copyBtn.current) {
-                    if ((copyBtn.current as any) instanceof HTMLButtonElement) {
-                      let btn = copyBtn.current as HTMLButtonElement;
-                      btn.style.transition = '';
-                      btn.style.backgroundColor = '#00b500';
-                      setTimeout(() => {
-                        btn.style.transition = 'background-color 1s';
-                        btn.style.backgroundColor = '';
-                      }, 500);
-                    }
+                    copyBtn.current.style.transition = 'background-color 1s';
+                    copyBtn.current.style.backgroundColor = '';
                   }
-                } catch (e) {
-                  console.warn(e);
-                }
+                }, 500);
               }
             }
           }}
