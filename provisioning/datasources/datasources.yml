@@ -10,7 +10,13 @@ datasources:
     orgId: 1
     version: 1
     editable: true
+    basicAuth: true
+    basicAuthUser: test
     jsonData:
+      authType: basic
       path: '/resources'
+      logPath: '/root/sni-thruk-datasource/logs/grafana-thruk-datasource.log'
+      logLevel: 3
     secureJsonData:
       apiKey: 'api-key'
+      basicAuthPassword: test
