@@ -195,7 +195,8 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 		response.Responses[q.RefID] = res
 	}
 
-	d.logger.Printf("[QueryData] response:\n%v", response)
+	responseJSON, _ := response.DeepCopy().MarshalJSON()
+	d.logger.Printf("[QueryData] response:\n%v", string(responseJSON))
 
 	return response, nil
 }
