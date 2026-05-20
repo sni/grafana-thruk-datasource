@@ -34,7 +34,9 @@ type queryModel struct {
 	Columns   []string `json:"columns"`
 	Condition string   `json:"condition"`
 	Limit     int      `json:"limit"`
-	Type      string   `json:"type"`
+	// can be a string
+	// can be a object {"label": "Timeseries","value": "graph"}
+	Type any `json:"type"`
 }
 
 // This type saves elements of "meta"."columns" array in wrapped_json type of Thruk responses
@@ -202,7 +204,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("json unmarshal: %v", err.Error()))
 	}
 
-	d.logger.Printf("[QueryData] refId=%s table=%s columns=%v condition=%q limit=%d type=%s",
+	d.logger.Printf("[QueryData] refId=%s table=%s columns=%v condition=%q limit=%d type=%v",
 		query.RefID, qm.Table, qm.Columns, qm.Condition, qm.Limit, qm.Type)
 
 	thrukURL := d.buildQueryURL(qm)
@@ -238,7 +240,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 	}
 
 	parseStart := time.Now()
-	result := d.parseThrukResponse(body, qm)
+	result := d.parseThrukResponse(body, qm, query.TimeRange)
 	d.logger.Printf("[QueryData] refId=%s parsed in %v", query.RefID, time.Since(parseStart))
 
 	return result
@@ -266,7 +268,7 @@ func (d *Datasource) buildQueryURL(qm queryModel) string {
 
 // intended to parse thruk reponses in wrapped_json format
 // Take a look under /docs/call-r-v1-hosts.sh for an example response.
-func (d *Datasource) parseThrukResponse(body []byte, qm queryModel) backend.DataResponse {
+func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange backend.TimeRange) backend.DataResponse {
 	var thrukResp thrukResponse
 	// the object looks like this: { "data": [] , "meta": []}
 	if err := json.Unmarshal(body, &thrukResp); err != nil {
@@ -283,21 +285,26 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel) backend.Data
 		}
 	}
 
-	frame := data.NewFrame("response")
-
 	if len(thrukResp.Data) == 0 {
 		d.logger.Printf("[QueryData] empty response, 0 rows returned")
-		return backend.DataResponse{Frames: data.Frames{frame}}
+		return backend.DataResponse{Frames: data.Frames{data.NewFrame("response")}}
 	}
 
+	visType := parseVisType(qm.Type)
+
+	if visType == "graph" {
+		return d.buildTimeseriesFrames(&thrukResp, timeRange, qm)
+	}
+
+	return d.buildTableFrame(&thrukResp, visType)
+}
+
+func (d *Datasource) buildTableFrame(thrukResp *thrukResponse, visType string) backend.DataResponse {
 	// add known query types from query model and columns
-	addKnownGrafanaDataTypes(&qm, thrukResp.Meta)
+	metaColumns := buildMetaColumnMap(thrukResp)
+	columns := determineColumns(thrukResp)
 
-	// get raw columns
-	columns := determineColumns(&thrukResp)
-	// map from "column name" -> column metadata
-	metaColumns := buildMetaColumnMap(&thrukResp)
-
+	frame := data.NewFrame("response")
 	for _, col := range columns {
 		fieldType := inferFieldType(col, metaColumns)
 		field := data.NewFieldFromFieldType(fieldType, len(thrukResp.Data))
@@ -316,21 +323,160 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel) backend.Data
 				field.Append(fmt.Sprintf("%v", val))
 			}
 		}
-
 		frame.Fields = append(frame.Fields, field)
 	}
 
-	d.logger.Printf("[QueryData] %d rows, %d columns returned", len(thrukResp.Data), len(columns))
-
-	visType := qm.Type
-	if visType == "timeseries" {
-		visType = "graph"
-	}
-	frame.Meta = &data.FrameMeta{
-		PreferredVisualization: data.VisType(visType),
-	}
-
+	d.logger.Printf("[QueryData] table: %d rows, %d columns", len(thrukResp.Data), len(columns))
+	frame.Meta = &data.FrameMeta{PreferredVisualization: data.VisType(visType)}
 	return backend.DataResponse{Frames: data.Frames{frame}}
+}
+
+// buildTimeseriesFrames converts tabular Thruk data into Grafana time series frames.
+// This is the Go equivalent of the frontend's _fakeTimeseries() method.
+// Each data row becomes its own frame. Columns with aggregation functions (e.g. "count()")
+// or numeric values become the value column; remaining columns form the series alias.
+// The value is spread across 10 evenly-spaced time points covering the query's time range.
+func (d *Datasource) buildTimeseriesFrames(thrukResp *thrukResponse, timeRange backend.TimeRange, qm queryModel) backend.DataResponse {
+	const steps = 10
+	from := timeRange.From.Unix()
+	to := timeRange.To.Unix()
+	step := (to - from) / steps
+	if step <= 0 {
+		step = 1
+	}
+
+	metaColumns := buildMetaColumnMap(thrukResp)
+	columns := determineColumns(thrukResp)
+
+	// Use user-specified columns if provided, otherwise use all response columns
+	orderedColumns := columns
+	if len(qm.Columns) > 0 && !(len(qm.Columns) == 1 && qm.Columns[0] == "*") {
+		orderedColumns = qm.Columns
+	}
+
+	dataRows := thrukResp.Data
+
+	// Convert single-row with many columns into key-value pairs, same as frontend
+	if len(dataRows) == 1 && len(orderedColumns) > 2 {
+		converted := make([]map[string]any, 0, len(orderedColumns))
+		for _, key := range orderedColumns {
+			converted = append(converted, map[string]any{
+				"__key":   key,
+				"__value": dataRows[0][key],
+			})
+		}
+		dataRows = converted
+		orderedColumns = []string{"__key", "__value"}
+		// Override meta types for the converted columns
+		metaColumns["__key"] = columnMetadata{Name: "__key"}
+		metaColumns["__value"] = columnMetadata{Name: "__value",
+			GrafanaDataType: fieldTypePtr(data.FieldTypeFloat64)}
+	}
+
+	// Find value column: first aggregation column, or first numeric, or first available
+	valueCol := findValueColumn(orderedColumns, metaColumns, dataRows)
+
+	// Name columns are all remaining columns not used as value
+	var nameCols []string
+	for _, col := range orderedColumns {
+		if col != valueCol {
+			nameCols = append(nameCols, col)
+		}
+	}
+
+	var frames data.Frames
+	d.logger.Printf("[QueryData] timeseries: %d rows, valueCol=%s, nameCols=%v", len(dataRows), valueCol, nameCols)
+
+	for _, row := range dataRows {
+		val := row[valueCol]
+		alias := valueCol
+		if len(nameCols) > 0 {
+			parts := make([]string, 0, len(nameCols))
+			for _, nc := range nameCols {
+				parts = append(parts, fmt.Sprintf("%v", row[nc]))
+			}
+			alias = strings.Join(parts, ";")
+		}
+
+		frame := data.NewFrame(alias)
+		frame.Fields = append(frame.Fields,
+			data.NewField("time", nil, make([]time.Time, steps)),
+			data.NewField(alias, nil, make([]float64, steps)),
+		)
+
+		for i := 0; i < steps; i++ {
+			frame.Set(0, i, time.Unix(from+step*int64(i), 0).UTC())
+			frame.Set(1, i, toFloat64(val))
+		}
+
+		frame.Meta = &data.FrameMeta{
+			PreferredVisualization: data.VisTypeGraph,
+		}
+		frames = append(frames, frame)
+	}
+
+	return backend.DataResponse{Frames: frames}
+}
+
+func findValueColumn(columns []string, metaColumns map[string]columnMetadata, dataRows []map[string]any) string {
+	if len(columns) == 0 {
+		return ""
+	}
+
+	// First preference: column using aggregation function e.g. "count()"
+	for _, col := range columns {
+		if strings.Contains(col, "(") && strings.Contains(col, ")") {
+			return col
+		}
+	}
+
+	// Second preference: first numeric column
+	if len(dataRows) > 0 {
+		for _, col := range columns {
+			if mc, ok := metaColumns[col]; ok {
+				if mc.GrafanaDataType != nil {
+					if *mc.GrafanaDataType == data.FieldTypeFloat64 || *mc.GrafanaDataType == data.FieldTypeInt64 {
+						return col
+					}
+				}
+				if mc.Type == "number" {
+					return col
+				}
+			}
+			// Fallback: check the actual value
+			if _, isNum := dataRows[0][col].(float64); isNum {
+				return col
+			}
+			if _, isNum := dataRows[0][col].(json.Number); isNum {
+				return col
+			}
+		}
+	}
+
+	// Third preference: first available column
+	return columns[0]
+}
+
+func fieldTypePtr(ft data.FieldType) *data.FieldType {
+	return &ft
+}
+
+func parseVisType(typeVal any) string {
+	if s, ok := typeVal.(string); ok {
+		if s == "timeseries" {
+			return "graph"
+		}
+		return s
+	}
+	if obj, ok := typeVal.(map[string]any); ok {
+		if v, ok := obj["value"].(string); ok {
+			if v == "timeseries" {
+				return "graph"
+			}
+			return v
+		}
+	}
+	return "table"
 }
 
 func (d *Datasource) setAuthenticationHeader(req *http.Request) {
