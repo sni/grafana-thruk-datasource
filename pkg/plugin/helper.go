@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
 func getQueryParam(rawURL string, key string) string {
@@ -100,5 +101,20 @@ func createLogger(jsonData *DatasourceSettingsJSONData) (*log.Logger, *os.File) 
 // sometimes it does not add types to stuff like num_services , leading them to be parsed as strings
 // that is our fallback defaut type
 func addKnownGrafanaDataTypes(qm *queryModel, meta *thrukMetadata) {
-	return
+
+	findAndChangeType := func(meta *thrukMetadata, name string, t data.FieldType) {
+		for i := range meta.Columns {
+			if meta.Columns[i].Name == name {
+				meta.Columns[i].GrafanaDataType = t
+			}
+		}
+	}
+
+	switch qm.Table {
+	case "/services/totals":
+		findAndChangeType(meta, "ok", data.FieldTypeInt64)
+		findAndChangeType(meta, "warning", data.FieldTypeInt64)
+		findAndChangeType(meta, "unknown", data.FieldTypeInt64)
+		findAndChangeType(meta, "critical", data.FieldTypeInt64)
+	}
 }

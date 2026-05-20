@@ -35,6 +35,21 @@ func toFloat64(v interface{}) float64 {
 	return 0
 }
 
+func toInt64(v interface{}) int64 {
+	switch val := v.(type) {
+	case int64:
+		return val
+	case float64:
+		return int64(val)
+	case json.Number:
+		f, err := val.Int64()
+		if err == nil {
+			return f
+		}
+	}
+	return 0
+}
+
 func toBool(v interface{}) bool {
 	switch val := v.(type) {
 	case bool:
@@ -50,8 +65,8 @@ func toBool(v interface{}) bool {
 
 func inferFieldType(name string, metaColumns map[string]columnMetadata) data.FieldType {
 	if mc, ok := metaColumns[name]; ok {
-		if mc.GrafanaDataType != nil {
-			return *mc.GrafanaDataType
+		if mc.GrafanaDataType != data.FieldTypeUnknown {
+			return mc.GrafanaDataType
 		}
 		switch mc.Type {
 		case "number":

@@ -45,10 +45,10 @@ type queryModel struct {
 // Some might have "config" which is a nested object like: { "unit" : "s"},
 // GrafanaDataType: added later, not present in Thruk Response
 type columnMetadata struct {
-	Name            string          `json:"name"`
-	Type            string          `json:"type"`
-	GrafanaDataType *data.FieldType `json:"grafanaDataType"`
-	Config          any             `json:"config"`
+	Name            string         `json:"name"`
+	Type            string         `json:"type"`
+	GrafanaDataType data.FieldType `json:"grafanaDataType"`
+	Config          any            `json:"config"`
 }
 
 // This type saves "meta" object in wrapped_json type of Thruk response
@@ -194,6 +194,9 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 		res := d.query(ctx, q)
 		response.Responses[q.RefID] = res
 	}
+
+	d.logger.Printf("[QueryData] response:\n%v", response)
+
 	return response, nil
 }
 
@@ -233,7 +236,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to read response: %v", err))
 	}
 
-	d.logger.Printf("[HTTP] response %d %s (%v, %d bytes)", resp.StatusCode, resp.Status, elapsed, len(body))
+	d.logger.Printf("[HTTP] response %d %s (%v, %d bytes): \n%s", resp.StatusCode, resp.Status, elapsed, len(body), string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("thruk returned status %d", resp.StatusCode))
@@ -267,21 +270,38 @@ func (d *Datasource) buildQueryURL(qm queryModel) string {
 }
 
 // intended to parse thruk reponses in wrapped_json format
-// Take a look under /docs/call-r-v1-hosts.sh for an example response.
+// The "data" can either be an array of objects or simply an object
+// Take a look under /docs/call-r-v1-hosts.sh for an array response.
+// Take a look under /docs/call-r-v1-services-totals.sh for an object example
 func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange backend.TimeRange) backend.DataResponse {
 	var thrukResp thrukResponse
-	// the object looks like this: { "data": [] , "meta": []}
-	if err := json.Unmarshal(body, &thrukResp); err != nil {
+
+	// Try wrapped_json format: { "data": <array|object> , "meta": {...} }
+	var rawResp struct {
+		Data json.RawMessage `json:"data"`
+		Meta *thrukMetadata  `json:"meta"`
+	}
+	if err := json.Unmarshal(body, &rawResp); err == nil && rawResp.Data != nil {
+		thrukResp.Meta = rawResp.Meta
+		// Try data as array first, then as single object
+		if err := json.Unmarshal(rawResp.Data, &thrukResp.Data); err != nil {
+			var dataObj map[string]any
+			if err2 := json.Unmarshal(rawResp.Data, &dataObj); err2 == nil {
+				thrukResp.Data = []map[string]any{dataObj}
+			}
+		}
+	} else {
+		// Not wrapped_json - try plain array, then single object
 		var plainData []map[string]any
-		if err2 := json.Unmarshal(body, &plainData); err2 != nil {
+		if err := json.Unmarshal(body, &plainData); err == nil {
+			thrukResp.Data = plainData
+		} else {
 			var singleObj map[string]any
-			if err3 := json.Unmarshal(body, &singleObj); err3 != nil {
+			if err := json.Unmarshal(body, &singleObj); err != nil {
 				d.logger.Printf("[QueryData] failed to parse response: %v", err)
 				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to parse response: %v", err))
 			}
 			thrukResp.Data = []map[string]any{singleObj}
-		} else {
-			thrukResp.Data = plainData
 		}
 	}
 
@@ -296,11 +316,15 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange ba
 		return d.buildTimeseriesFrames(&thrukResp, timeRange, qm)
 	}
 
-	return d.buildTableFrame(&thrukResp, visType)
+	return d.buildTableFrame(&qm, &thrukResp, visType)
 }
 
-func (d *Datasource) buildTableFrame(thrukResp *thrukResponse, visType string) backend.DataResponse {
+// This function assumes that thrukResponse.Data is of type []map[string]any
+// Even when the response was a single object, it is converted in parseThrukResponse method
+func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, visType string) backend.DataResponse {
 	// add known query types from query model and columns
+	addKnownGrafanaDataTypes(qm, thrukResp.Meta)
+
 	metaColumns := buildMetaColumnMap(thrukResp)
 	columns := determineColumns(thrukResp)
 
@@ -310,13 +334,18 @@ func (d *Datasource) buildTableFrame(thrukResp *thrukResponse, visType string) b
 		field := data.NewFieldFromFieldType(fieldType, len(thrukResp.Data))
 		field.Name = col
 
+		d.logger.Printf("[TableFrame] building column: %s with fieldType: %d", col, fieldType)
+
 		for _, row := range thrukResp.Data {
 			val := row[col]
+			d.logger.Printf("[TableFrame] [Column: %s] row: %v val: %d", col, row, val)
 			switch fieldType {
-			case data.FieldTypeTime:
-				field.Append(toTime(val))
+			case data.FieldTypeInt64:
+				field.Append(toInt64(val))
 			case data.FieldTypeFloat64:
 				field.Append(toFloat64(val))
+			case data.FieldTypeTime:
+				field.Append(toTime(val))
 			case data.FieldTypeBool:
 				field.Append(toBool(val))
 			default:
@@ -370,7 +399,7 @@ func (d *Datasource) buildTimeseriesFrames(thrukResp *thrukResponse, timeRange b
 		// Override meta types for the converted columns
 		metaColumns["__key"] = columnMetadata{Name: "__key"}
 		metaColumns["__value"] = columnMetadata{Name: "__value",
-			GrafanaDataType: fieldTypePtr(data.FieldTypeFloat64)}
+			GrafanaDataType: data.FieldTypeFloat64}
 	}
 
 	// Find value column: first aggregation column, or first numeric, or first available
@@ -434,8 +463,8 @@ func findValueColumn(columns []string, metaColumns map[string]columnMetadata, da
 	if len(dataRows) > 0 {
 		for _, col := range columns {
 			if mc, ok := metaColumns[col]; ok {
-				if mc.GrafanaDataType != nil {
-					if *mc.GrafanaDataType == data.FieldTypeFloat64 || *mc.GrafanaDataType == data.FieldTypeInt64 {
+				if mc.GrafanaDataType != data.FieldTypeUnknown {
+					if mc.GrafanaDataType == data.FieldTypeFloat64 || mc.GrafanaDataType == data.FieldTypeInt64 {
 						return col
 					}
 				}
@@ -455,10 +484,6 @@ func findValueColumn(columns []string, metaColumns map[string]columnMetadata, da
 
 	// Third preference: first available column
 	return columns[0]
-}
-
-func fieldTypePtr(ft data.FieldType) *data.FieldType {
-	return &ft
 }
 
 func parseVisType(typeVal any) string {
@@ -486,7 +511,7 @@ func (d *Datasource) setAuthenticationHeader(req *http.Request) {
 }
 
 func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
-	d.logger.Printf("[Resource] %s %s", req.Path, req.URL)
+	d.logger.Printf("[Resource] path: %s url: %s", req.Path, req.URL)
 
 	var thrukPath string
 	var extraHeaders map[string]string
@@ -511,7 +536,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 	}
 
 	thrukURL := d.url + thrukPath
-	d.logger.Printf("[Resource] GET %s", thrukURL)
+	d.logger.Printf("[Resource] GET thrukUrl: %s", thrukURL)
 
 	httpReq, err := http.NewRequestWithContext(ctx, "GET", thrukURL, nil)
 	if err != nil {
