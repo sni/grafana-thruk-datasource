@@ -531,6 +531,22 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 		table = strings.TrimPrefix(table, "/")
 		thrukPath = "/r/v1/" + table + "?limit=1"
 		extraHeaders = map[string]string{"x-thruk-columns": "true"}
+	case "variable-query":
+		table := getQueryParam(req.URL, "table")
+		q := getQueryParam(req.URL, "q")
+		columns := getQueryParam(req.URL, "columns")
+		limit := getQueryParam(req.URL, "limit")
+		if table == "" {
+			d.logger.Printf("[Resource] variable-query missing table parameter")
+			return sender.Send(&backend.CallResourceResponse{
+				Status: http.StatusBadRequest,
+				Body:   []byte("missing 'table' query parameter"),
+			})
+		}
+		table = strings.TrimPrefix(table, "/")
+		thrukPath = "/r/v1/" + table + "?columns=" + url.QueryEscape(columns) +
+			"&q=" + url.QueryEscape(q) +
+			"&limit=" + url.QueryEscape(limit)
 	default:
 		thrukPath = "/r/v1/" + strings.TrimPrefix(req.Path, "/")
 	}

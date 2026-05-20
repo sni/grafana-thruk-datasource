@@ -61,9 +61,9 @@ export class DataSource extends DataSourceWithBackend<ThrukQuery, ThrukDataSourc
 
     try {
       const response = await this.getResource('variable-query', params);
-      if (response && Array.isArray(response.data)) {
+      if (response && Array.isArray(response)) {
         const key = query.columns[0];
-        return response.data.map((row: any) => ({
+        return response.map((row: any) => ({
           text: row[key],
           value: row[key],
         }));
