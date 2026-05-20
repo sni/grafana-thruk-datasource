@@ -48,8 +48,11 @@ func toBool(v interface{}) bool {
 	return false
 }
 
-func inferFieldType(name string, metaColumns map[string]metaColumn) data.FieldType {
+func inferFieldType(name string, metaColumns map[string]columnMetadata) data.FieldType {
 	if mc, ok := metaColumns[name]; ok {
+		if mc.GrafanaDataType != nil {
+			return *mc.GrafanaDataType
+		}
 		switch mc.Type {
 		case "number":
 			return data.FieldTypeFloat64

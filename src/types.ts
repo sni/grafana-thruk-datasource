@@ -18,4 +18,6 @@ export const defaultQuery: Partial<ThrukQuery> = {
 
 export interface ThrukDataSourceOptions extends DataSourceJsonData {
   keepCookies?: string[];
+  logLevel?: number;
+  logPath?: string;
 }

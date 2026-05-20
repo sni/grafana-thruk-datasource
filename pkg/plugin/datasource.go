@@ -27,6 +27,8 @@ var (
 
 const defaultLimit = 1000
 
+// What a query coming in from Grafana will contain
+// Defined in types.ts as ThrukQuery
 type queryModel struct {
 	Table     string   `json:"table"`
 	Columns   []string `json:"columns"`
@@ -35,42 +37,78 @@ type queryModel struct {
 	Type      string   `json:"type"`
 }
 
-type metaColumn struct {
-	Name   string      `json:"name"`
-	Type   string      `json:"type"`
-	Config interface{} `json:"config"`
+// This type saves elements of "meta"."columns" array in wrapped_json type of Thruk responses
+// Most of the colum metadata only have "name"
+// Some might have "type" as well, taking values like: "time"
+// Some might have "config" which is a nested object like: { "unit" : "s"},
+// GrafanaDataType: added later, not present in Thruk Response
+type columnMetadata struct {
+	Name            string          `json:"name"`
+	Type            string          `json:"type"`
+	GrafanaDataType *data.FieldType `json:"grafanaDataType"`
+	Config          any             `json:"config"`
 }
 
-type thrukMeta struct {
-	Columns []metaColumn `json:"columns"`
+// This type saves "meta" object in wrapped_json type of Thruk response
+// RequestDuration: is added later, not present in Thruk Response
+// ParseDuration: is added later, not present in Thruk response
+type thrukMetadata struct {
+	Columns         []columnMetadata `json:"columns"`
+	RequestDuration time.Duration    `json:"requestDuration"`
+	ParseDuration   time.Duration    `json:"parseDuration"`
 }
 
+// This type saves a wrapped_json type of Thruk response
+// { "data": [] , "meta": []}
+// docs/r-v1-hosts-response.json has an example of this
 type thrukResponse struct {
-	Data []map[string]interface{} `json:"data"`
-	Meta *thrukMeta               `json:"meta"`
+	Data []map[string]any `json:"data"`
+	Meta *thrukMetadata   `json:"meta"`
 }
 
 type Datasource struct {
-	url        string
-	basicAuth  string
-	httpClient *http.Client
-	logger     *log.Logger
-	logFile    *os.File
+	url                       string
+	basicAuthenticationHeader string
+	jsonData                  *DatasourceSettingsJSONData
+	httpClient                *http.Client
+	logger                    *log.Logger
+	logFile                   *os.File
+}
+
+// ConfigEditor.tsx props has options
+// options has a jsonData field of type DataSourceSettings<T, S>
+// options.jsonData is of type T
+// in Config.Editor.tsx it uses ThrukDataSourceOptions as T
+// Configuration of a datasource is then sent as backend.DataSourceInstanceSettings
+// backend.DataSourceInstanceSettings.jsonData is of type json.RawMessage
+// parse it into this type, which reflects ThrukDataSourceOptions
+type DatasourceSettingsJSONData struct {
+	KeepCookies []string `json:"keepCookies"`
+	LogLevel    int64    `json:"logLevel"`
+	LogPath     string   `json:"logPath"`
 }
 
 func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	u := strings.TrimRight(settings.URL, "/")
 
-	logger, logFile := createLogger()
+	var jsonData DatasourceSettingsJSONData
+	if settings.JSONData != nil {
+		if err := json.Unmarshal(settings.JSONData, &jsonData); err != nil {
+			return nil, fmt.Errorf("failed to parse jsonData: %w", err)
+		}
+	}
+
+	logger, logFile := createLogger(&jsonData)
 
 	return &Datasource{
-		url:       u,
-		basicAuth: buildBasicAuth(settings),
+		url:                       u,
+		basicAuthenticationHeader: buildBasicAuthenticationHeader(settings),
 		httpClient: &http.Client{
 			Timeout: 30 * time.Second,
 		},
-		logger:  logger,
-		logFile: logFile,
+		logger:   logger,
+		logFile:  logFile,
+		jsonData: &jsonData,
 	}, nil
 }
 
@@ -81,19 +119,6 @@ func (d *Datasource) Dispose() {
 	if d.logFile != nil {
 		d.logFile.Close()
 	}
-}
-
-func createLogger() (*log.Logger, *os.File) {
-	logDir := "/root/sni-thruk-datasource/logs"
-	os.MkdirAll(logDir, 0755)
-
-	filename := logDir + "/plugin.log"
-	f, err := os.OpenFile(filename, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != nil {
-		return log.New(os.Stderr, "[thruk] ", log.LstdFlags), nil
-	}
-
-	return log.New(f, "", log.LstdFlags), f
 }
 
 func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
@@ -110,7 +135,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 			Message: fmt.Sprintf("Failed to create request: %v", err),
 		}, nil
 	}
-	d.setAuth(req)
+	d.setAuthenticationHeader(req)
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(req)
@@ -133,17 +158,18 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 		}, nil
 	}
 
-	var result struct {
+	var CheckHealthResponseType struct {
 		ThrukVersion string `json:"thruk_version"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+
+	if err := json.NewDecoder(resp.Body).Decode(&CheckHealthResponseType); err != nil {
 		d.logger.Printf("[CheckHealth] failed to parse response: %v", err)
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: fmt.Sprintf("Failed to parse response: %v", err),
 		}, nil
 	}
-	if result.ThrukVersion == "" {
+	if CheckHealthResponseType.ThrukVersion == "" {
 		d.logger.Println("[CheckHealth] no thruk_version in response")
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
@@ -151,10 +177,10 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 		}, nil
 	}
 
-	d.logger.Printf("[CheckHealth] connected to Thruk v%s", result.ThrukVersion)
+	d.logger.Printf("[CheckHealth] connected to Thruk v%s", CheckHealthResponseType.ThrukVersion)
 	return &backend.CheckHealthResult{
 		Status:  backend.HealthStatusOk,
-		Message: "Successfully connected to Thruk v" + result.ThrukVersion,
+		Message: "Successfully connected to Thruk v" + CheckHealthResponseType.ThrukVersion,
 	}, nil
 }
 
@@ -188,7 +214,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to create request: %v", err))
 	}
 	req.Header.Set("X-THRUK-OutputFormat", "wrapped_json")
-	d.setAuth(req)
+	d.setAuthenticationHeader(req)
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(req)
@@ -238,17 +264,20 @@ func (d *Datasource) buildQueryURL(qm queryModel) string {
 	return u
 }
 
+// intended to parse thruk reponses in wrapped_json format
+// Take a look under /docs/call-r-v1-hosts.sh for an example response.
 func (d *Datasource) parseThrukResponse(body []byte, qm queryModel) backend.DataResponse {
 	var thrukResp thrukResponse
+	// the object looks like this: { "data": [] , "meta": []}
 	if err := json.Unmarshal(body, &thrukResp); err != nil {
-		var plainData []map[string]interface{}
+		var plainData []map[string]any
 		if err2 := json.Unmarshal(body, &plainData); err2 != nil {
-			var singleObj map[string]interface{}
+			var singleObj map[string]any
 			if err3 := json.Unmarshal(body, &singleObj); err3 != nil {
 				d.logger.Printf("[QueryData] failed to parse response: %v", err)
 				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to parse response: %v", err))
 			}
-			thrukResp.Data = []map[string]interface{}{singleObj}
+			thrukResp.Data = []map[string]any{singleObj}
 		} else {
 			thrukResp.Data = plainData
 		}
@@ -261,7 +290,12 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel) backend.Data
 		return backend.DataResponse{Frames: data.Frames{frame}}
 	}
 
+	// add known query types from query model and columns
+	addKnownGrafanaDataTypes(&qm, thrukResp.Meta)
+
+	// get raw columns
 	columns := determineColumns(&thrukResp)
+	// map from "column name" -> column metadata
 	metaColumns := buildMetaColumnMap(&thrukResp)
 
 	for _, col := range columns {
@@ -299,9 +333,9 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel) backend.Data
 	return backend.DataResponse{Frames: data.Frames{frame}}
 }
 
-func (d *Datasource) setAuth(req *http.Request) {
-	if d.basicAuth != "" {
-		req.Header.Set("Authorization", d.basicAuth)
+func (d *Datasource) setAuthenticationHeader(req *http.Request) {
+	if d.basicAuthenticationHeader != "" {
+		req.Header.Set("Authorization", d.basicAuthenticationHeader)
 	}
 }
 
@@ -341,7 +375,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 			Body:   []byte(fmt.Sprintf("failed to create request: %v", err)),
 		})
 	}
-	d.setAuth(httpReq)
+	d.setAuthenticationHeader(httpReq)
 	for k, v := range extraHeaders {
 		httpReq.Header.Set(k, v)
 	}
