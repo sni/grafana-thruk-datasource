@@ -21,7 +21,7 @@
   "links": [],
   "panels": [
     {
-      "collapsed": false,
+      "collapsed": true,
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -29,1213 +29,1214 @@
         "y": 0
       },
       "id": 16,
-      "panels": [],
+      "panels": [
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "max": 10,
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": []
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 1
+          },
+          "id": 12,
+          "options": {
+            "cellHeight": "sm",
+            "frameIndex": 4,
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "datasource": {
+                "type": "sni-thruk-datasource",
+                "uid": "sni-thruk-datasource"
+              },
+              "limit": 1,
+              "refId": "A",
+              "table": "/hosts",
+              "type": {
+                "label": "Table",
+                "value": "table"
+              }
+            }
+          ],
+          "title": "/hosts",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 362
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 8
+          },
+          "id": 21,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "time = $time",
+              "datasource": {
+                "type": "sni-thruk-datasource",
+                "uid": "sni-thruk-datasource"
+              },
+              "refId": "A",
+              "table": "/hostgroups",
+              "type": "table"
+            }
+          ],
+          "title": "/hostgroups",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 7,
+            "w": 24,
+            "x": 0,
+            "y": 13
+          },
+          "id": 7,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "host_name",
+                "description",
+                "state"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/services",
+              "type": "table"
+            }
+          ],
+          "title": "/services",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 5,
+            "w": 24,
+            "x": 0,
+            "y": 20
+          },
+          "id": 22,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/servicegroups",
+              "type": "table"
+            }
+          ],
+          "title": "/servicegroups",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 25
+          },
+          "id": 6,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/contacts",
+              "type": "table"
+            }
+          ],
+          "title": "/contacts",
+          "transformations": [
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "destinationType": "string",
+                    "targetField": "state"
+                  }
+                ],
+                "fields": {}
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 31
+          },
+          "id": 23,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/contactgroups",
+              "type": "table"
+            }
+          ],
+          "title": "/contactgroups",
+          "transformations": [
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "destinationType": "string",
+                    "targetField": "state"
+                  }
+                ],
+                "fields": {}
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 37
+          },
+          "id": 24,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/commands",
+              "type": "table"
+            }
+          ],
+          "title": "/commands",
+          "transformations": [
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "destinationType": "string",
+                    "targetField": "state"
+                  }
+                ],
+                "fields": {}
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 43
+          },
+          "id": 25,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/timeperiods",
+              "type": "table"
+            }
+          ],
+          "title": "/timeperiods",
+          "transformations": [
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "destinationType": "string",
+                    "targetField": "state"
+                  }
+                ],
+                "fields": {}
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 49
+          },
+          "id": 26,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/downtimes",
+              "type": "table"
+            }
+          ],
+          "title": "/downtimes",
+          "transformations": [
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "destinationType": "string",
+                    "targetField": "state"
+                  }
+                ],
+                "fields": {}
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "hideFrom": {
+                  "viz": false
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "state"
+                },
+                "properties": [
+                  {
+                    "id": "mappings",
+                    "value": [
+                      {
+                        "options": {
+                          "0": {
+                            "index": 0,
+                            "text": "Ok"
+                          },
+                          "1": {
+                            "index": 1,
+                            "text": "Warning"
+                          },
+                          "2": {
+                            "index": 2,
+                            "text": "Critical"
+                          },
+                          "3": {
+                            "index": 3,
+                            "text": "Unknown"
+                          }
+                        },
+                        "type": "value"
+                      }
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 55
+          },
+          "id": 27,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/comments",
+              "type": "table"
+            }
+          ],
+          "title": "/comments",
+          "transformations": [
+            {
+              "id": "convertFieldType",
+              "options": {
+                "conversions": [
+                  {
+                    "destinationType": "string",
+                    "targetField": "state"
+                  }
+                ],
+                "fields": {}
+              }
+            }
+          ],
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 362
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 61
+          },
+          "id": 11,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "time = $time",
+              "datasource": {
+                "type": "sni-thruk-datasource",
+                "uid": "sni-thruk-datasource"
+              },
+              "refId": "A",
+              "table": "/notifications",
+              "type": "table"
+            }
+          ],
+          "title": "/notifications",
+          "type": "table"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "thresholds"
+              },
+              "custom": {
+                "align": "auto",
+                "cellOptions": {
+                  "type": "auto"
+                },
+                "footer": {
+                  "reducers": []
+                },
+                "inspect": false
+              },
+              "mappings": [],
+              "thresholds": {
+                "mode": "absolute",
+                "steps": [
+                  {
+                    "color": "green",
+                    "value": 0
+                  },
+                  {
+                    "color": "red",
+                    "value": 80
+                  }
+                ]
+              }
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "type"
+                },
+                "properties": [
+                  {
+                    "id": "custom.width",
+                    "value": 362
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 6,
+            "w": 24,
+            "x": 0,
+            "y": 67
+          },
+          "id": 28,
+          "options": {
+            "cellHeight": "sm",
+            "showHeader": true
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "time = $time",
+              "datasource": {
+                "type": "sni-thruk-datasource",
+                "uid": "sni-thruk-datasource"
+              },
+              "refId": "A",
+              "table": "/alerts",
+              "type": "table"
+            }
+          ],
+          "title": "/alerts",
+          "type": "table"
+        }
+      ],
       "title": "Basic Table Queries",
       "type": "row"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "max": 10,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 7,
-        "w": 24,
-        "x": 0,
-        "y": 1
-      },
-      "id": 12,
-      "options": {
-        "cellHeight": "sm",
-        "frameIndex": 4,
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "datasource": {
-            "type": "sni-thruk-datasource",
-            "uid": "sni-thruk-datasource"
-          },
-          "limit": 1,
-          "refId": "A",
-          "table": "/hosts",
-          "type": {
-            "label": "Table",
-            "value": "table"
-          }
-        }
-      ],
-      "title": "/hosts",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "type"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 362
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 24,
-        "x": 0,
-        "y": 8
-      },
-      "id": 21,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "time = $time",
-          "datasource": {
-            "type": "sni-thruk-datasource",
-            "uid": "sni-thruk-datasource"
-          },
-          "refId": "A",
-          "table": "/hostgroups",
-          "type": "table"
-        }
-      ],
-      "title": "/hostgroups",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 24,
-        "x": 0,
-        "y": 13
-      },
-      "id": 7,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "host_name",
-            "description",
-            "state"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/services",
-          "type": "table"
-        }
-      ],
-      "title": "/services",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 5,
-        "w": 24,
-        "x": 0,
-        "y": 18
-      },
-      "id": 22,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/servicegroups",
-          "type": "table"
-        }
-      ],
-      "title": "/servicegroups",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 23
-      },
-      "id": 6,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/contacts",
-          "type": "table"
-        }
-      ],
-      "title": "/contacts",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "state"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 29
-      },
-      "id": 23,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/contactgroups",
-          "type": "table"
-        }
-      ],
-      "title": "/contactgroups",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "state"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 35
-      },
-      "id": 24,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/commands",
-          "type": "table"
-        }
-      ],
-      "title": "/commands",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "state"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 41
-      },
-      "id": 25,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/timeperiods",
-          "type": "table"
-        }
-      ],
-      "title": "/timeperiods",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "state"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 47
-      },
-      "id": 26,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/downtimes",
-          "type": "table"
-        }
-      ],
-      "title": "/downtimes",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "state"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "hideFrom": {
-              "viz": false
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "state"
-            },
-            "properties": [
-              {
-                "id": "mappings",
-                "value": [
-                  {
-                    "options": {
-                      "0": {
-                        "index": 0,
-                        "text": "Ok"
-                      },
-                      "1": {
-                        "index": 1,
-                        "text": "Warning"
-                      },
-                      "2": {
-                        "index": 2,
-                        "text": "Critical"
-                      },
-                      "3": {
-                        "index": 3,
-                        "text": "Unknown"
-                      }
-                    },
-                    "type": "value"
-                  }
-                ]
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 53
-      },
-      "id": 27,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "",
-          "refId": "A",
-          "table": "/comments",
-          "type": "table"
-        }
-      ],
-      "title": "/comments",
-      "transformations": [
-        {
-          "id": "convertFieldType",
-          "options": {
-            "conversions": [
-              {
-                "destinationType": "string",
-                "targetField": "state"
-              }
-            ],
-            "fields": {}
-          }
-        }
-      ],
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "type"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 362
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 59
-      },
-      "id": 11,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "time = $time",
-          "datasource": {
-            "type": "sni-thruk-datasource",
-            "uid": "sni-thruk-datasource"
-          },
-          "refId": "A",
-          "table": "/notifications",
-          "type": "table"
-        }
-      ],
-      "title": "/notifications",
-      "type": "table"
-    },
-    {
-      "datasource": {
-        "type": "sni-thruk-datasource",
-        "uid": "sni-thruk-datasource"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "thresholds"
-          },
-          "custom": {
-            "align": "auto",
-            "cellOptions": {
-              "type": "auto"
-            },
-            "footer": {
-              "reducers": []
-            },
-            "inspect": false
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": 0
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          }
-        },
-        "overrides": [
-          {
-            "matcher": {
-              "id": "byName",
-              "options": "type"
-            },
-            "properties": [
-              {
-                "id": "custom.width",
-                "value": 362
-              }
-            ]
-          }
-        ]
-      },
-      "gridPos": {
-        "h": 6,
-        "w": 24,
-        "x": 0,
-        "y": 65
-      },
-      "id": 28,
-      "options": {
-        "cellHeight": "sm",
-        "showHeader": true
-      },
-      "pluginVersion": "12.4.0",
-      "targets": [
-        {
-          "columns": [
-            "*"
-          ],
-          "condition": "time = $time",
-          "datasource": {
-            "type": "sni-thruk-datasource",
-            "uid": "sni-thruk-datasource"
-          },
-          "refId": "A",
-          "table": "/alerts",
-          "type": "table"
-        }
-      ],
-      "title": "/alerts",
-      "type": "table"
     },
     {
       "collapsed": true,
@@ -1243,7 +1244,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 71
+        "y": 1
       },
       "id": 15,
       "panels": [
@@ -1292,7 +1293,7 @@
             "h": 8,
             "w": 9,
             "x": 0,
-            "y": 106
+            "y": 2
           },
           "id": 10,
           "options": {
@@ -1368,7 +1369,7 @@
             "h": 8,
             "w": 9,
             "x": 9,
-            "y": 106
+            "y": 2
           },
           "id": 9,
           "options": {
@@ -1395,7 +1396,7 @@
               }
             }
           ],
-          "title": "Total Services",
+          "title": "/hosts display_name + num_services",
           "type": "table"
         }
       ],
@@ -1408,7 +1409,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 72
+        "y": 2
       },
       "id": 18,
       "panels": [
@@ -1457,7 +1458,7 @@
             "h": 10,
             "w": 9,
             "x": 0,
-            "y": 75
+            "y": 3
           },
           "id": 13,
           "options": {
@@ -1501,7 +1502,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 73
+        "y": 3
       },
       "id": 17,
       "panels": [
@@ -1514,7 +1515,7 @@
             "h": 18,
             "w": 12,
             "x": 0,
-            "y": 96
+            "y": 4
           },
           "id": 20,
           "options": {
@@ -1616,7 +1617,7 @@
             "h": 8,
             "w": 5,
             "x": 12,
-            "y": 96
+            "y": 4
           },
           "id": 5,
           "options": {
@@ -1751,7 +1752,7 @@
             "h": 8,
             "w": 5,
             "x": 17,
-            "y": 96
+            "y": 4
           },
           "id": 14,
           "options": {
@@ -1799,6 +1800,138 @@
           ],
           "title": "Pie Chart on /hosts/totals",
           "type": "piechart"
+        },
+        {
+          "datasource": {
+            "type": "sni-thruk-datasource",
+            "uid": "sni-thruk-datasource"
+          },
+          "fieldConfig": {
+            "defaults": {
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "hideFrom": {
+                  "legend": false,
+                  "tooltip": false,
+                  "viz": false
+                }
+              },
+              "mappings": []
+            },
+            "overrides": [
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "ok"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "green",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "warning"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "yellow",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "unknown"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "orange",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              },
+              {
+                "matcher": {
+                  "id": "byName",
+                  "options": "critical"
+                },
+                "properties": [
+                  {
+                    "id": "color",
+                    "value": {
+                      "fixedColor": "red",
+                      "mode": "fixed"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "gridPos": {
+            "h": 8,
+            "w": 5,
+            "x": 12,
+            "y": 12
+          },
+          "id": 29,
+          "options": {
+            "displayLabels": [
+              "name",
+              "value"
+            ],
+            "legend": {
+              "displayMode": "table",
+              "placement": "right",
+              "showLegend": true,
+              "values": [
+                "value"
+              ]
+            },
+            "pieType": "pie",
+            "reduceOptions": {
+              "calcs": [
+                "lastNotNull"
+              ],
+              "fields": "",
+              "values": true
+            },
+            "sort": "desc",
+            "tooltip": {
+              "hideZeros": false,
+              "mode": "single",
+              "sort": "none"
+            }
+          },
+          "pluginVersion": "12.4.0",
+          "targets": [
+            {
+              "columns": [
+                "*"
+              ],
+              "condition": "",
+              "refId": "A",
+              "table": "/contacts/totals",
+              "type": "table"
+            }
+          ],
+          "title": "Pie Chart on /contacts/totals",
+          "type": "piechart"
         }
       ],
       "title": "Aggegator Endpoints",
@@ -1810,7 +1943,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 4
       },
       "id": 19,
       "panels": [
@@ -1843,7 +1976,7 @@
             "h": 4,
             "w": 3,
             "x": 0,
-            "y": 73
+            "y": 41
           },
           "id": 8,
           "options": {
@@ -1883,13 +2016,119 @@
       ],
       "title": "Thruk API Functions",
       "type": "row"
+    },
+    {
+      "collapsed": true,
+      "gridPos": {
+        "h": 1,
+        "w": 24,
+        "x": 0,
+        "y": 5
+      },
+      "id": 30,
+      "panels": [],
+      "title": "Variable Usage",
+      "type": "row"
+    },
+    {
+      "datasource": {
+        "type": "sni-thruk-datasource",
+        "uid": "sni-thruk-datasource"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": 0
+              },
+              {
+                "color": "red",
+                "value": 80
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 6
+      },
+      "id": 31,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "percentChangeColorMode": "standard",
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
+      },
+      "pluginVersion": "12.4.0",
+      "targets": [
+        {
+          "columns": [
+            "hosts_active_all_sum",
+            "services_active_sum"
+          ],
+          "condition": "",
+          "refId": "A",
+          "table": "sites/${backends:csv}/checks/stats",
+          "type": "table"
+        }
+      ],
+      "title": "sites/${backends:csv}/checks/stats",
+      "type": "stat"
     }
   ],
   "preload": false,
   "schemaVersion": 42,
   "tags": [],
   "templating": {
-    "list": []
+    "list": [
+      {
+        "current": {
+          "text": [
+            "Naemon",
+            "Icinga 2"
+          ],
+          "value": [
+            "Naemon",
+            "Icinga 2"
+          ]
+        },
+        "datasource": {
+          "type": "sni-thruk-datasource",
+          "uid": "sni-thruk-datasource"
+        },
+        "definition": "SELECT name FROM /sites",
+        "multi": true,
+        "name": "backends",
+        "options": [],
+        "query": "SELECT name FROM /sites",
+        "refresh": 1,
+        "regex": "",
+        "regexApplyTo": "value",
+        "type": "query"
+      }
+    ]
   },
   "time": {
     "from": "now-12h",
@@ -1899,6 +2138,6 @@
   "timezone": "browser",
   "title": "Thruk Test Dashboard",
   "uid": "fesvkq3pxdo1sc",
-  "version": 11,
+  "version": 13,
   "weekStart": ""
 }
