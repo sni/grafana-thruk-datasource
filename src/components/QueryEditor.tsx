@@ -42,7 +42,7 @@ export const QueryEditor = (props: Props) => {
     return props.datasource
       .getResource('tables')
       .then((response: any) => {
-        const urls = response.data.map((row: { url?: string }) => row.url);
+        const urls = response.map((row: { url?: string }) => row.url);
         tablesCache.current = urls.slice();
         return urls;
       })
@@ -68,16 +68,16 @@ export const QueryEditor = (props: Props) => {
     return props.datasource
       .getResource('columns', { table: url })
       .then((response: any) => {
-        if (!response.data) {
+        if (!response) {
           return ['*'];
         }
-        if (Array.isArray(response.data) && response.data[0]) {
-          const cols = Object.keys(response.data[0]);
+        if (Array.isArray(response) && response[0]) {
+          const cols = Object.keys(response[0]);
           columnsCache.current = { url, columns: cols.slice() };
           return cols;
         }
-        if (response.data instanceof Object) {
-          const cols = Object.keys(response.data);
+        if (response instanceof Object) {
+          const cols = Object.keys(response);
           columnsCache.current = { url, columns: cols.slice() };
           return cols;
         }
