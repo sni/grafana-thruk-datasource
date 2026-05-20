@@ -338,18 +338,41 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 
 		for _, row := range thrukResp.Data {
 			val := row[col]
-			d.logger.Printf("[TableFrame] [Column: %s] row: %v val: %d", col, row, val)
+			d.logger.Printf("[TableFrame] [Column: %s] row: %v val: %v", col, row, val)
 			switch fieldType {
 			case data.FieldTypeInt64:
 				field.Append(toInt64(val))
+				field.Config = &data.FieldConfig{
+					Description: "int64",
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "blue"},
+					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+				}
 			case data.FieldTypeFloat64:
 				field.Append(toFloat64(val))
+				field.Config = &data.FieldConfig{
+					Description: "float64",
+					Custom:      map[string]any{"displayMode": "color-blue"},
+				}
 			case data.FieldTypeTime:
 				field.Append(toTime(val))
+				field.Config = &data.FieldConfig{
+					Description: "time",
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "green"},
+					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+				}
 			case data.FieldTypeBool:
 				field.Append(toBool(val))
+				field.Config = &data.FieldConfig{
+					Description: "bool",
+					Custom:      map[string]any{"displayMode": "color-red"},
+				}
 			default:
 				field.Append(fmt.Sprintf("%v", val))
+				field.Config = &data.FieldConfig{
+					Description: "string",
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "purple"},
+					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+				}
 			}
 		}
 		frame.Fields = append(frame.Fields, field)
