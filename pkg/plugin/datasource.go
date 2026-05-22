@@ -379,15 +379,33 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 
 	frame := data.NewFrame("response")
 	for _, col := range columns {
-		fieldType := inferFieldType(col, metaColumns)
-		field := data.NewFieldFromFieldType(fieldType, len(thrukResp.Data))
+
+		unknownFieldType := false
+		fieldType, metadataWritenType := inferFieldType(col, metaColumns)
+		if fieldType == data.FieldTypeUnknown {
+			unknownFieldType = true
+			fieldType = data.FieldTypeString
+		}
+
+		field := data.NewFieldFromFieldType(fieldType, 0)
 		field.Name = col
 
-		d.logger.Printf("[TableFrame] building column: %s with fieldType: %d", col, fieldType)
+		d.logger.Printf("[TableFrame] building column: %s , fieldType is unknown: %t , final fieldType: %s", col, unknownFieldType, FieldTypeToString(fieldType))
 
 		for _, row := range thrukResp.Data {
 			val := row[col]
-			d.logger.Printf("[TableFrame] [Column: %s] row: %v val: %v", col, row, val)
+			// d.logger.Printf("[TableFrame] [Column: %s] val: %v", col, val)
+
+			if unknownFieldType {
+				field.Append(toString(val))
+				field.Config = &data.FieldConfig{
+					Description: "string",
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "white"},
+					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+				}
+				continue
+			}
+
 			switch fieldType {
 			case data.FieldTypeInt64:
 				field.Append(toInt64(val))
@@ -400,7 +418,8 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 				field.Append(toFloat64(val))
 				field.Config = &data.FieldConfig{
 					Description: "float64",
-					Custom:      map[string]any{"displayMode": "color-blue"},
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "red"},
+					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
 			case data.FieldTypeTime:
 				field.Append(toTime(val))
@@ -413,17 +432,43 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 				field.Append(toBool(val))
 				field.Config = &data.FieldConfig{
 					Description: "bool",
-					Custom:      map[string]any{"displayMode": "color-red"},
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "yellow"},
+					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
+			case data.FieldTypeString:
+				switch metadataWritenType {
+				case "array_of_strings":
+					val2 := []string{}
+					if valAsAnyArray, ok := val.([]any); ok {
+						for _, elem := range valAsAnyArray {
+							val2 = append(val2, toString(elem))
+						}
+					}
+					field.Append(toString(val2))
+					field.Config = &data.FieldConfig{
+						Description: "string",
+						Color:       map[string]any{"mode": "fixed", "fixedColor": "fuchsia"},
+						Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+					}
+				default:
+					field.Append(toString(val))
+					field.Config = &data.FieldConfig{
+						Description: "string",
+						Color:       map[string]any{"mode": "fixed", "fixedColor": "purple"},
+						Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+					}
+				}
+
 			default:
-				field.Append(fmt.Sprintf("%v", val))
+				field.Append(toString(val))
 				field.Config = &data.FieldConfig{
 					Description: "string",
-					Color:       map[string]any{"mode": "fixed", "fixedColor": "purple"},
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "black"},
 					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
 			}
 		}
+
 		frame.Fields = append(frame.Fields, field)
 	}
 
