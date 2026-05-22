@@ -165,11 +165,12 @@ func (d *Datasource) Dispose() {
 	}
 }
 
+// This function is to be implemented accoring to the SDK interface
 func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequest) (*backend.CheckHealthResult, error) {
 	d.logger.Println("[CheckHealth] testing connection")
 
 	thrukURL := d.url + "/r/v1/thruk?columns=thruk_version"
-	d.logger.Printf("[CheckHealth] GET %s", thrukURL)
+	d.logger.Printf("[CheckHealth] GET %s\n", thrukURL)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", thrukURL, nil)
 	if err != nil {
@@ -179,7 +180,8 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 			Message: fmt.Sprintf("Failed to create request: %v", err),
 		}, nil
 	}
-	d.setAuthenticationHeader(req)
+	d.setAuthorizationHeader(req)
+	d.logger.Printf("[CheckHealth] Cookie Header: %s", req.Header.Values("Cookie"))
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(req)
@@ -193,7 +195,14 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 	}
 	defer resp.Body.Close()
 
-	d.logger.Printf("[CheckHealth] response %d (%v)", resp.StatusCode, elapsed)
+	body, err := io.ReadAll(resp.Body)
+
+	var CheckHealthResponseType struct {
+		ThrukVersion string `json:"thruk_version"`
+	}
+
+	d.logger.Printf("[CheckHealth] response code: %d , elapsed: %v", resp.StatusCode, elapsed)
+	d.logger.Printf("[CheckHealth] response body: %s", string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return &backend.CheckHealthResult{
@@ -202,17 +211,14 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 		}, nil
 	}
 
-	var CheckHealthResponseType struct {
-		ThrukVersion string `json:"thruk_version"`
-	}
-
-	if err := json.NewDecoder(resp.Body).Decode(&CheckHealthResponseType); err != nil {
+	if err := json.Unmarshal(body, &CheckHealthResponseType); err != nil {
 		d.logger.Printf("[CheckHealth] failed to parse response: %v", err)
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: fmt.Sprintf("Failed to parse response: %v", err),
 		}, nil
 	}
+
 	if CheckHealthResponseType.ThrukVersion == "" {
 		d.logger.Println("[CheckHealth] no thruk_version in response")
 		return &backend.CheckHealthResult{
