@@ -14,6 +14,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/backend/instancemgmt"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
@@ -156,9 +157,10 @@ func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSetti
 	}, nil
 }
 
+// This function is to be implemented accoring to the SDK interface
 func (d *Datasource) Dispose() {
 	if d.logger != nil {
-		d.logger.Println("plugin instance disposed")
+		d.logger.Println("Plugin instance disposed")
 	}
 	if d.logFile != nil {
 		d.logFile.Close()
@@ -234,6 +236,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 	}, nil
 }
 
+// This function is to be implemented accoring to the SDK interface
 func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
 	d.logger.Printf("[QueryData] received %d queries", len(req.Queries))
 
@@ -243,8 +246,8 @@ func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataReques
 		response.Responses[q.RefID] = res
 	}
 
-	responseJSON, _ := response.DeepCopy().MarshalJSON()
-	d.logger.Printf("[QueryData] response:\n%v", string(responseJSON))
+	//responseJSON, _ := response.DeepCopy().MarshalJSON()
+	//d.logger.Printf("[QueryData] response:\n%v", string(responseJSON))
 
 	return response, nil
 }
@@ -268,7 +271,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to create request: %v", err))
 	}
 	req.Header.Set("X-THRUK-OutputFormat", "wrapped_json")
-	d.setAuthenticationHeader(req)
+	d.setAuthorizationHeader(req)
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(req)
@@ -285,7 +288,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to read response: %v", err))
 	}
 
-	d.logger.Printf("[HTTP] response %d %s (%v, %d bytes): \n%s", resp.StatusCode, resp.Status, elapsed, len(body), string(body))
+	d.logger.Printf("[HTTP] response code: %d %s , elapsed: %v , bytes: %d", resp.StatusCode, resp.Status, elapsed, len(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("thruk returned status %d", resp.StatusCode))
@@ -319,7 +322,7 @@ func (d *Datasource) buildQueryURL(qm queryModel) string {
 }
 
 // intended to parse thruk reponses in wrapped_json format
-// The "data" can either be an array of objects or simply an object
+// The "data" field of the json can either be an array of objects or simply an object
 // Take a look under /docs/call-r-v1-hosts.sh for an array response.
 // Take a look under /docs/call-r-v1-services-totals.sh for an object example
 func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange backend.TimeRange) backend.DataResponse {
@@ -621,7 +624,7 @@ func parseVisType(typeVal any) string {
 	return "table"
 }
 
-func (d *Datasource) setAuthenticationHeader(req *http.Request) {
+func (d *Datasource) setAuthorizationHeader(req *http.Request) {
 	if d.basicAuthenticationHeader != "" {
 		req.Header.Set("Authorization", d.basicAuthenticationHeader)
 	}
@@ -679,7 +682,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 			Body:   []byte(fmt.Sprintf("failed to create request: %v", err)),
 		})
 	}
-	d.setAuthenticationHeader(httpReq)
+	d.setAuthorizationHeader(httpReq)
 	for k, v := range extraHeaders {
 		httpReq.Header.Set(k, v)
 	}

@@ -1,11 +1,15 @@
 package plugin
 
 import (
+	"bytes"
 	"encoding/base64"
+	"encoding/json"
+	"fmt"
 	"log"
 	"net/url"
 	"os"
 	"path/filepath"
+	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
@@ -116,5 +120,164 @@ func addKnownGrafanaDataTypes(qm *queryModel, meta *thrukMetadata) {
 		findAndChangeType(meta, "warning", data.FieldTypeInt64)
 		findAndChangeType(meta, "unknown", data.FieldTypeInt64)
 		findAndChangeType(meta, "critical", data.FieldTypeInt64)
+	}
+}
+
+func (jsonData *DatasourceSettingsJSONData) setDefaults() {
+	if jsonData.PdcInjected == nil {
+		val := true
+		jsonData.PdcInjected = &val
+	}
+
+	if jsonData.TlsAuth == nil {
+		val := true
+		jsonData.TlsAuth = &val
+	}
+
+	if jsonData.TlsSkipVerify == nil {
+		val := false
+		jsonData.TlsSkipVerify = &val
+	}
+}
+
+// There are two ways for using cookies through backend
+// 1. Manually specify them using Header with name 'Cookie' and value '<cookie_name>=<cookie_value>'
+// These are transmitted using jsonData.httpHeaderNameN and secureJsonData.httpHeaderValueN
+// The code parses up to 5 of these
+// 2. Specify which cookies to forward from Grafana
+// Grafana should access these cookies, while Thruk sets them. thruk_auth cookie looks something like this:
+// { "name": "thruk_auth", "value": "788599f61eb529b18a6a93f520b37c235a1e84e5bf26bfa0cca3cbebb4c06363_1", "domain": "192.168.202.202:3000", "hostOnly": true, "path": "/", "secure": false, "httpOnly": true, "sameSite": "lax", "session": true, "firstPartyDomain": "", "partitionKey": null, "storeId": null }
+// Which cookies are forwarded is specified in jsonData.KeepCookies
+// Cookies forwarded are put into the Request Headers like this:
+// Cookie thruk_auth=788599f61eb529b18a6a93f520b37c235a1e84e5bf26bfa0cca3cbebb4c06363_1; thruk_screen={"height":1010,"width":2421}
+func buildCookieJar(jsonData *DatasourceSettingsJSONData, secureJSONData *DatasourceSettingsSecureJSONData) {
+
+}
+
+// String returns a string representation of the DataSourceInstanceSettings.
+func StringDataSourceInstanceSettings(s *backend.DataSourceInstanceSettings) string {
+	var jsonDataBytes []byte
+	jsonDataStr := "nil"
+	if s.JSONData != nil {
+		jsonDataBytes = []byte(s.JSONData)
+		// Pretty-print the JSON
+		var prettyJSON bytes.Buffer
+		if err := json.Indent(&prettyJSON, jsonDataBytes, "", "  "); err == nil {
+			jsonDataStr = "\n" + prettyJSON.String()
+		} else {
+			jsonDataStr = "\n" + string(jsonDataBytes)
+		}
+	}
+
+	var decryptedDataStr string
+	if s.DecryptedSecureJSONData != nil {
+		// Pretty-print the map as JSON
+		decryptedBytes, err := json.MarshalIndent(s.DecryptedSecureJSONData, "", "  ")
+		if err == nil {
+			decryptedDataStr = "\n" + string(decryptedBytes)
+		} else {
+			decryptedDataStr = "\n(map marshaling error)"
+		}
+	} else {
+		decryptedDataStr = "nil"
+	}
+
+	return fmt.Sprintf(`DataSourceInstanceSettings{
+  ID: %d
+  UID: %s
+  Type: %s
+  Name: %s
+  URL: %s
+  User: %s
+  Database: %s
+  BasicAuthEnabled: %t
+  BasicAuthUser: %s
+  JSONData: %s
+  DecryptedSecureJSONData: %s
+  Updated: %s
+  APIVersion: %s
+}`,
+		s.ID,
+		s.UID,
+		s.Type,
+		s.Name,
+		s.URL,
+		s.User,
+		s.Database,
+		s.BasicAuthEnabled,
+		s.BasicAuthUser,
+		jsonDataStr,
+		decryptedDataStr,
+		s.Updated.Format(time.RFC3339),
+		s.APIVersion,
+	)
+}
+
+func FieldTypeToString(ft data.FieldType) string {
+	switch ft {
+	case data.FieldTypeUnknown:
+		return "FieldTypeUnknown"
+	case data.FieldTypeInt8:
+		return "FieldTypeInt8"
+	case data.FieldTypeNullableInt8:
+		return "FieldTypeNullableInt8"
+	case data.FieldTypeInt16:
+		return "FieldTypeInt16"
+	case data.FieldTypeNullableInt16:
+		return "FieldTypeNullableInt16"
+	case data.FieldTypeInt32:
+		return "FieldTypeInt32"
+	case data.FieldTypeNullableInt32:
+		return "FieldTypeNullableInt32"
+	case data.FieldTypeInt64:
+		return "FieldTypeInt64"
+	case data.FieldTypeNullableInt64:
+		return "FieldTypeNullableInt64"
+	case data.FieldTypeUint8:
+		return "FieldTypeUint8"
+	case data.FieldTypeNullableUint8:
+		return "FieldTypeNullableUint8"
+	case data.FieldTypeUint16:
+		return "FieldTypeUint16"
+	case data.FieldTypeNullableUint16:
+		return "FieldTypeNullableUint16"
+	case data.FieldTypeUint32:
+		return "FieldTypeUint32"
+	case data.FieldTypeNullableUint32:
+		return "FieldTypeNullableUint32"
+	case data.FieldTypeUint64:
+		return "FieldTypeUint64"
+	case data.FieldTypeNullableUint64:
+		return "FieldTypeNullableUint64"
+	case data.FieldTypeFloat32:
+		return "FieldTypeFloat32"
+	case data.FieldTypeNullableFloat32:
+		return "FieldTypeNullableFloat32"
+	case data.FieldTypeFloat64:
+		return "FieldTypeFloat64"
+	case data.FieldTypeNullableFloat64:
+		return "FieldTypeNullableFloat64"
+	case data.FieldTypeString:
+		return "FieldTypeString"
+	case data.FieldTypeNullableString:
+		return "FieldTypeNullableString"
+	case data.FieldTypeBool:
+		return "FieldTypeBool"
+	case data.FieldTypeNullableBool:
+		return "FieldTypeNullableBool"
+	case data.FieldTypeTime:
+		return "FieldTypeTime"
+	case data.FieldTypeNullableTime:
+		return "FieldTypeNullableTime"
+	case data.FieldTypeJSON:
+		return "FieldTypeJSON"
+	case data.FieldTypeNullableJSON:
+		return "FieldTypeNullableJSON"
+	case data.FieldTypeEnum:
+		return "FieldTypeEnum"
+	case data.FieldTypeNullableEnum:
+		return "FieldTypeNullableEnum"
+	default:
+		return "FieldTypeUnknown"
 	}
 }
