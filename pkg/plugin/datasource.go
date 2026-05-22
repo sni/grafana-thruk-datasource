@@ -84,13 +84,35 @@ type Datasource struct {
 // Configuration of a datasource is then sent as backend.DataSourceInstanceSettings
 // backend.DataSourceInstanceSettings.jsonData is of type json.RawMessage
 // parse it into this type, which reflects ThrukDataSourceOptions
+// ThrukDataSourceOptions in turn extends upon a default field configuration
 type DatasourceSettingsJSONData struct {
-	KeepCookies []string `json:"keepCookies"`
-	LogLevel    int64    `json:"logLevel"`
-	LogPath     string   `json:"logPath"`
+	KeepCookies     []string `json:"keepCookies"`
+	LogLevel        int64    `json:"logLevel"`
+	LogPath         string   `json:"logPath"`
+	PdcInjected     *bool    `json:"pdcInjected,omitempty"`
+	ServerName      *string  `json:"serverName,omitempty"`
+	TlsAuth         *bool    `json:"tlsAuth,omitempty"`
+	TlsSkipVerify   *bool    `json:"tlsSkipVerify,omitempty"`
+	ReadOnly        *bool    `json:"readOnly,omitempty"`
+	HTTPHeaderName1 *string  `json:"httpHeaderName1,omitempty"`
+	HTTPHeaderName2 *string  `json:"httpHeaderName2,omitempty"`
+	HTTPHeaderName3 *string  `json:"httpHeaderName3,omitempty"`
+	HTTPHeaderName4 *string  `json:"httpHeaderName4,omitempty"`
+	HTTPHeaderName5 *string  `json:"httpHeaderName5,omitempty"`
 }
 
-func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
+type DatasourceSettingsSecureJSONData struct {
+	HTTPHeaderValue1 *string `json:"httpHeaderValue1,omitempty"`
+	HTTPHeaderValue2 *string `json:"httpHeaderValue2,omitempty"`
+	HTTPHeaderValue3 *string `json:"httpHeaderValue3,omitempty"`
+	HTTPHeaderValue4 *string `json:"httpHeaderValue4,omitempty"`
+	HTTPHeaderValue5 *string `json:"httpHeaderValue5,omitempty"`
+	TlsClientCert    *string `json:"tlsClientCert,omitempty"`
+	TlsClientKey     *string `json:"tlsClientKey,omitempty"`
+}
+
+// This function is to be implemented accoring to the SDK interface
+func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSettings) (instancemgmt.Instance, error) {
 	u := strings.TrimRight(settings.URL, "/")
 
 	var jsonData DatasourceSettingsJSONData
@@ -99,18 +121,38 @@ func NewDatasource(_ context.Context, settings backend.DataSourceInstanceSetting
 			return nil, fmt.Errorf("failed to parse jsonData: %w", err)
 		}
 	}
+	jsonData.setDefaults()
 
 	logger, logFile := createLogger(&jsonData)
+	logger.Printf("[NewDatasource] setttings:\n%s", StringDataSourceInstanceSettings(&settings))
+
+	httpOpts, err := settings.HTTPClientOptions(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get http client options from context: %w", err)
+	}
+
+	httpOpts.ForwardHTTPHeaders = true
+	httpOpts.Timeouts = &httpclient.TimeoutOptions{
+		Timeout: 30 * time.Second,
+	}
+
+	httpOpts.TLS = &httpclient.TLSOptions{
+		InsecureSkipVerify: *jsonData.TlsSkipVerify,
+	}
+
+	provider := httpclient.NewProvider()
+	client, err := provider.New(httpOpts)
+	if err != nil {
+		return nil, fmt.Errorf("couldnt create http client using provider: %w", err)
+	}
 
 	return &Datasource{
 		url:                       u,
 		basicAuthenticationHeader: buildBasicAuthenticationHeader(settings),
-		httpClient: &http.Client{
-			Timeout: 30 * time.Second,
-		},
-		logger:   logger,
-		logFile:  logFile,
-		jsonData: &jsonData,
+		httpClient:                client,
+		logger:                    logger,
+		logFile:                   logFile,
+		jsonData:                  &jsonData,
 	}, nil
 }
 
