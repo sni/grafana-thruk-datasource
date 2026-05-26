@@ -291,7 +291,7 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 	d.logger.Printf("[HTTP] response code: %d %s , elapsed: %v , bytes: %d", resp.StatusCode, resp.Status, elapsed, len(body))
 
 	if resp.StatusCode != http.StatusOK {
-		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("thruk returned status %d", resp.StatusCode))
+		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("thruk returned status: %d , body: %s", resp.StatusCode, string(body)))
 	}
 
 	parseStart := time.Now()
