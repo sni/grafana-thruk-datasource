@@ -421,7 +421,7 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 				field.Append(toFloat64(val))
 				field.Config = &data.FieldConfig{
 					Description: "float64",
-					Color:       map[string]any{"mode": "fixed", "fixedColor": "red"},
+					Color:       map[string]any{"mode": "fixed", "fixedColor": "silver"},
 					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
 			case data.FieldTypeTime:
@@ -435,8 +435,22 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 				field.Append(toBool(val))
 				field.Config = &data.FieldConfig{
 					Description: "bool",
-					Color:       map[string]any{"mode": "fixed", "fixedColor": "yellow"},
-					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
+					Custom:      map[string]any{"cellOptions": map[string]any{"mode": "thresholds", "type": "color-background"}},
+					Color: map[string]any{
+						"0":     "white",
+						"1":     "white",
+						"true":  "white",
+						"false": "white",
+					},
+					Thresholds: &data.ThresholdsConfig{
+						Mode: data.ThresholdsModeAbsolute,
+						Steps: []data.Threshold{
+							{Value: 0, Color: "white"},
+							{Value: 1, Color: "white"},
+							{Value: 0.0, Color: "white"},
+							{Value: 1.0, Color: "white"},
+						},
+					},
 				}
 			case data.FieldTypeString:
 				switch metadataWritenType {

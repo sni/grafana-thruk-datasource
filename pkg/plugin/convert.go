@@ -53,6 +53,16 @@ func toInt64(v interface{}) int64 {
 
 func toBool(v interface{}) bool {
 	switch val := v.(type) {
+	case int64:
+		if v.(int64) == 1 {
+			return true
+		}
+		return false
+	case float64:
+		if v.(float64) == 1 {
+			return true
+		}
+		return false
 	case bool:
 		return val
 	case string:
