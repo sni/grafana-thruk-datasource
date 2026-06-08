@@ -2,7 +2,6 @@ package plugin
 
 import (
 	"bytes"
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -12,6 +11,7 @@ import (
 	"time"
 
 	"github.com/grafana/grafana-plugin-sdk-go/backend"
+	"github.com/grafana/grafana-plugin-sdk-go/backend/httpclient"
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
@@ -21,15 +21,6 @@ func getQueryParam(rawURL string, key string) string {
 		return ""
 	}
 	return u.Query().Get(key)
-}
-
-func buildBasicAuthenticationHeader(s backend.DataSourceInstanceSettings) string {
-	if s.BasicAuthEnabled && s.BasicAuthUser != "" {
-		password := s.DecryptedSecureJSONData["basicAuthPassword"]
-		auth := s.BasicAuthUser + ":" + password
-		return "Basic " + base64.StdEncoding.EncodeToString([]byte(auth))
-	}
-	return ""
 }
 
 // works on wrapped_json calls where metadata is present, or normal calls where everything is on the same object
@@ -100,6 +91,24 @@ func createLogger(jsonData *DatasourceSettingsJSONData) (*log.Logger, *os.File) 
 	return log.New(f, "", log.LstdFlags), f
 }
 
+func parseVisType(typeVal any) string {
+	if s, ok := typeVal.(string); ok {
+		if s == "timeseries" {
+			return "graph"
+		}
+		return s
+	}
+	if obj, ok := typeVal.(map[string]any); ok {
+		if v, ok := obj["value"].(string); ok {
+			if v == "timeseries" {
+				return "graph"
+			}
+			return v
+		}
+	}
+	return "table"
+}
+
 // if we know the table used in query model, we can iterate through the columns and add their backend types by hand
 // this is a band-aid fix. it would be better if thruk reported everything correctly in its metada
 // sometimes it does not add types to stuff like num_services , leading them to be parsed as strings
@@ -143,7 +152,6 @@ func (jsonData *DatasourceSettingsJSONData) setDefaults() {
 // There are two ways for using cookies through backend
 // 1. Manually specify them using Header with name 'Cookie' and value '<cookie_name>=<cookie_value>'
 // These are transmitted using jsonData.httpHeaderNameN and secureJsonData.httpHeaderValueN
-// The code parses up to 5 of these
 // 2. Specify which cookies to forward from Grafana
 // Grafana should access these cookies, while Thruk sets them. thruk_auth cookie looks something like this:
 // { "name": "thruk_auth", "value": "788599f61eb529b18a6a93f520b37c235a1e84e5bf26bfa0cca3cbebb4c06363_1", "domain": "192.168.202.202:3000", "hostOnly": true, "path": "/", "secure": false, "httpOnly": true, "sameSite": "lax", "session": true, "firstPartyDomain": "", "partitionKey": null, "storeId": null }
@@ -280,4 +288,27 @@ func FieldTypeToString(ft data.FieldType) string {
 	default:
 		return "FieldTypeUnknown"
 	}
+}
+
+func HTTPClientOptionsToString(opts httpclient.Options) string {
+	var buf bytes.Buffer
+	buf.WriteString(fmt.Sprintf("HTTPClientOptions{ForwardHTTPHeaders:%t", opts.ForwardHTTPHeaders))
+	if opts.Timeouts != nil {
+		buf.WriteString(fmt.Sprintf(", Timeout:%s", opts.Timeouts.Timeout))
+	}
+	if opts.TLS != nil {
+		buf.WriteString(fmt.Sprintf(", TLS.InsecureSkipVerify:%t", opts.TLS.InsecureSkipVerify))
+	}
+	if opts.BasicAuth != nil {
+		buf.WriteString(fmt.Sprintf(", BasicAuth.User:%s", opts.BasicAuth.User))
+	}
+	if len(opts.Header) > 0 {
+		buf.WriteString(", Headers:[")
+		for key, values := range opts.Header {
+			buf.WriteString(fmt.Sprintf("%s=%v, ", key, values))
+		}
+		buf.WriteString("]")
+	}
+	buf.WriteByte('}')
+	return buf.String()
 }

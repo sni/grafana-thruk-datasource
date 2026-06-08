@@ -70,12 +70,11 @@ type thrukResponse struct {
 }
 
 type Datasource struct {
-	url                       string
-	basicAuthenticationHeader string
-	jsonData                  *DatasourceSettingsJSONData
-	httpClient                *http.Client
-	logger                    *log.Logger
-	logFile                   *os.File
+	url        string
+	httpClient *http.Client
+	logger     *log.Logger
+	logFile    *os.File
+	uid        string
 }
 
 // ConfigEditor.tsx props has options
@@ -141,19 +140,22 @@ func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSetti
 		InsecureSkipVerify: *jsonData.TlsSkipVerify,
 	}
 
+	logger.Printf("[NewDatasource] http client options: %s", HTTPClientOptionsToString(httpOpts))
+
 	provider := httpclient.NewProvider()
 	client, err := provider.New(httpOpts)
 	if err != nil {
 		return nil, fmt.Errorf("couldnt create http client using provider: %w", err)
 	}
 
+	logger.Printf("[NewDatasource] creating new datasource with uid: %s", settings.UID)
+
 	return &Datasource{
-		url:                       u,
-		basicAuthenticationHeader: buildBasicAuthenticationHeader(settings),
-		httpClient:                client,
-		logger:                    logger,
-		logFile:                   logFile,
-		jsonData:                  &jsonData,
+		url:        u,
+		httpClient: client,
+		logger:     logger,
+		logFile:    logFile,
+		uid:        settings.UID,
 	}, nil
 }
 
@@ -172,7 +174,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 	d.logger.Println("[CheckHealth] testing connection")
 
 	thrukURL := d.url + "/r/v1/thruk?columns=thruk_version"
-	d.logger.Printf("[CheckHealth] GET %s\n", thrukURL)
+	d.logger.Printf("[datasource: %s] [CheckHealth] GET %s\n", d.uid, thrukURL)
 
 	req, err := http.NewRequestWithContext(ctx, "GET", thrukURL, nil)
 	if err != nil {
@@ -182,14 +184,13 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 			Message: fmt.Sprintf("Failed to create request: %v", err),
 		}, nil
 	}
-	d.setAuthorizationHeader(req)
-	d.logger.Printf("[CheckHealth] Cookie Header: %s", req.Header.Values("Cookie"))
+	d.logger.Printf("[datasource: %s] [CheckHealth] Cookie Header: %s", d.uid, req.Header.Values("Cookie"))
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(req)
 	elapsed := time.Since(start)
 	if err != nil {
-		d.logger.Printf("[CheckHealth] connection failed after %v: %v", elapsed, err)
+		d.logger.Printf("[datasource: %s] [CheckHealth] connection failed after %v: %v", d.uid, elapsed, err)
 		return &backend.CheckHealthResult{
 			Status:  backend.HealthStatusError,
 			Message: fmt.Sprintf("Connection failed: %v", err),
@@ -203,8 +204,8 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 		ThrukVersion string `json:"thruk_version"`
 	}
 
-	d.logger.Printf("[CheckHealth] response code: %d , elapsed: %v", resp.StatusCode, elapsed)
-	d.logger.Printf("[CheckHealth] response body: %s", string(body))
+	d.logger.Printf("[datasource: %s] [CheckHealth] response code: %d , elapsed: %v", d.uid, resp.StatusCode, elapsed)
+	d.logger.Printf("[datasource: %s] [CheckHealth] response body: %s", d.uid, string(body))
 
 	if resp.StatusCode != http.StatusOK {
 		return &backend.CheckHealthResult{
@@ -238,7 +239,7 @@ func (d *Datasource) CheckHealth(ctx context.Context, _ *backend.CheckHealthRequ
 
 // This function is to be implemented accoring to the SDK interface
 func (d *Datasource) QueryData(ctx context.Context, req *backend.QueryDataRequest) (*backend.QueryDataResponse, error) {
-	d.logger.Printf("[QueryData] received %d queries", len(req.Queries))
+	d.logger.Printf("[datasource: %s] [QueryData] received %d queries", d.uid, len(req.Queries))
 
 	response := backend.NewQueryDataResponse()
 	for _, q := range req.Queries {
@@ -263,6 +264,10 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		query.RefID, qm.Table, qm.Columns, qm.Condition, qm.Limit, qm.Type)
 
 	rewriteAliasedEndpoints(&qm)
+
+	d.logger.Printf("[QueryData] rewritten refId=%s table=%s columns=%v condition=%q limit=%d type=%v",
+		query.RefID, qm.Table, qm.Columns, qm.Condition, qm.Limit, qm.Type)
+
 	thrukURL := d.buildQueryURL(qm)
 	d.logger.Printf("[HTTP] GET %s", thrukURL)
 
@@ -281,7 +286,6 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 		return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to create request: %v", err))
 	}
 	req.Header.Set("X-THRUK-OutputFormat", "wrapped_json")
-	d.setAuthorizationHeader(req)
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(req)
@@ -637,30 +641,6 @@ func findValueColumn(columns []string, metaColumns map[string]columnMetadata, da
 	return columns[0]
 }
 
-func parseVisType(typeVal any) string {
-	if s, ok := typeVal.(string); ok {
-		if s == "timeseries" {
-			return "graph"
-		}
-		return s
-	}
-	if obj, ok := typeVal.(map[string]any); ok {
-		if v, ok := obj["value"].(string); ok {
-			if v == "timeseries" {
-				return "graph"
-			}
-			return v
-		}
-	}
-	return "table"
-}
-
-func (d *Datasource) setAuthorizationHeader(req *http.Request) {
-	if d.basicAuthenticationHeader != "" {
-		req.Header.Set("Authorization", d.basicAuthenticationHeader)
-	}
-}
-
 func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResourceRequest, sender backend.CallResourceResponseSender) error {
 	d.logger.Printf("[Resource] path: %s url: %s", req.Path, req.URL)
 
@@ -698,6 +678,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 		thrukPath = "/r/v1/" + table + "?columns=" + url.QueryEscape(columns) +
 			"&q=" + url.QueryEscape(q) +
 			"&limit=" + url.QueryEscape(limit)
+		extraHeaders = map[string]string{"X-Thruk-Output-Metadata-Only": "true"}
 	default:
 		thrukPath = "/r/v1/" + strings.TrimPrefix(req.Path, "/")
 	}
@@ -713,7 +694,7 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 			Body:   []byte(fmt.Sprintf("failed to create request: %v", err)),
 		})
 	}
-	d.setAuthorizationHeader(httpReq)
+
 	for k, v := range extraHeaders {
 		httpReq.Header.Set(k, v)
 	}
