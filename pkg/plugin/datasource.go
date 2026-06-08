@@ -262,8 +262,18 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 	d.logger.Printf("[QueryData] refId=%s table=%s columns=%v condition=%q limit=%d type=%v",
 		query.RefID, qm.Table, qm.Columns, qm.Condition, qm.Limit, qm.Type)
 
+	rewriteAliasedEndpoints(&qm)
 	thrukURL := d.buildQueryURL(qm)
 	d.logger.Printf("[HTTP] GET %s", thrukURL)
+
+	cachedResult, err := getCachedResult(&qm, d.uid, thrukURL, nil)
+	if err != nil {
+		d.logger.Printf("[CACHE] error when getting cached result: %s", err.Error())
+	}
+	if cachedResult != nil {
+		d.logger.Printf("[CACHE] using cached result for query %s", thrukURL)
+		return *cachedResult.result
+	}
 
 	req, err := http.NewRequestWithContext(ctx, "GET", thrukURL, nil)
 	if err != nil {
@@ -298,10 +308,17 @@ func (d *Datasource) query(ctx context.Context, query backend.DataQuery) backend
 	result := d.parseThrukResponse(body, qm, query.TimeRange)
 	d.logger.Printf("[QueryData] refId=%s parsed in %v", query.RefID, time.Since(parseStart))
 
+	err = writeCachedResult(&qm, d.uid, thrukURL, nil, &result)
+	if err != nil {
+		d.logger.Printf("[CACHE] error when writing cached result: %s", err.Error())
+	}
+
 	return result
 }
 
 func (d *Datasource) buildQueryURL(qm queryModel) string {
+	rewriteAliasedEndpoints(&qm)
+
 	path := strings.TrimPrefix(qm.Table, "/")
 	u := fmt.Sprintf("%s/r/v1/%s", d.url, path)
 
