@@ -1,0 +1,24 @@
+Test endpoints even more
+
+Write more documentation
+
+Implement logLevel - do not always log with printf
+
+Use a http client pool when making connections, keep a lot of clients ready
+
+Configurable timeout of clients
+
+
+/hostgroups/<name>/availability thruk crash
+
+/hostrgoups/<name>/outages thruk crash
+
+/hosts/<name>/availability
+
+/thruk/api_keys/<id> 404 code in table
+
+/thruk/bp/<nr> 404 code in table
+
+/thruk/broadcasts/<file>  404 code in table
+
+/thruk/cluster/<file>  501 code in table , use POST instead of GET?

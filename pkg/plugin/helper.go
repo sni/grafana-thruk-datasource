@@ -23,9 +23,10 @@ func getQueryParam(rawURL string, key string) string {
 	return u.Query().Get(key)
 }
 
-// works on wrapped_json calls where metadata is present, or normal calls where everything is on the same object
+// works on wrapped_json calls where metadata is present, in such calls it looks for resp.Meta.Columns
+// or normal json calls where everything is on the same object, in such calls it looks for first row
 // docs/r-v1-hosts-response.json and docs/r1-v1-thruk-response.json
-func determineColumns(resp *thrukResponse) []string {
+func determineColumnsFromThrukResponse(resp *thrukResponse) []string {
 	if resp.Meta != nil && len(resp.Meta.Columns) > 0 {
 		cols := make([]string, 0, len(resp.Meta.Columns))
 		for _, c := range resp.Meta.Columns {
@@ -43,7 +44,9 @@ func determineColumns(resp *thrukResponse) []string {
 	return nil
 }
 
-func buildMetaColumnMap(resp *thrukResponse) map[string]columnMetadata {
+// builds a map from columnMetadata.Name -> columnMetadata
+// useful for fast lookups directly from name
+func buildColumnMetadataMap(resp *thrukResponse) map[string]columnMetadata {
 	m := make(map[string]columnMetadata)
 	if resp.Meta != nil {
 		for _, c := range resp.Meta.Columns {
@@ -53,7 +56,7 @@ func buildMetaColumnMap(resp *thrukResponse) map[string]columnMetadata {
 	return m
 }
 
-func createLogger(jsonData *DatasourceSettingsJSONData) (*log.Logger, *os.File) {
+func createLoggerFromDatasourceSettings(jsonData *DatasourceSettingsJSONData) (*log.Logger, *os.File) {
 	// If logLevel is 0 or jsonData is nil, don't create a logger
 	if jsonData == nil || jsonData.LogLevel == 0 {
 		return log.New(os.Stderr, "[grafana-thruk-datasource] ", log.LstdFlags), nil
@@ -65,6 +68,7 @@ func createLogger(jsonData *DatasourceSettingsJSONData) (*log.Logger, *os.File) 
 	}
 
 	// Expand environment variables and ~ in the path
+	// This can be used with environment variables like ${OMD_ROOT}
 	expandedPath := os.ExpandEnv(logPath)
 	expandedPath = os.Expand(expandedPath, func(key string) string {
 		// Handle ~ expansion manually
@@ -91,7 +95,7 @@ func createLogger(jsonData *DatasourceSettingsJSONData) (*log.Logger, *os.File) 
 	return log.New(f, "", log.LstdFlags), f
 }
 
-func parseVisType(typeVal any) string {
+func parseVisualizationType(typeVal any) string {
 	if s, ok := typeVal.(string); ok {
 		if s == "timeseries" {
 			return "graph"
@@ -110,10 +114,8 @@ func parseVisType(typeVal any) string {
 }
 
 // if we know the table used in query model, we can iterate through the columns and add their backend types by hand
-// this is a band-aid fix. it would be better if thruk reported everything correctly in its metada
-// sometimes it does not add types to stuff like num_services , leading them to be parsed as strings
-// that is our fallback defaut type
-func addKnownGrafanaDataTypes(qm *queryModel, meta *thrukMetadata) {
+// this is a band-aid fix, only use it if thruk does not report column type metadata incorrectly.
+func overrideKnownGrafanaDataTypes(qm *queryModel, meta *thrukMetadata) {
 
 	findAndChangeType := func(meta *thrukMetadata, name string, t data.FieldType) {
 		for i := range meta.Columns {
@@ -124,11 +126,8 @@ func addKnownGrafanaDataTypes(qm *queryModel, meta *thrukMetadata) {
 	}
 
 	switch qm.Table {
-	case "/services/totals":
-		findAndChangeType(meta, "ok", data.FieldTypeInt64)
-		findAndChangeType(meta, "warning", data.FieldTypeInt64)
-		findAndChangeType(meta, "unknown", data.FieldTypeInt64)
-		findAndChangeType(meta, "critical", data.FieldTypeInt64)
+	case "example-non-existent-table":
+		findAndChangeType(meta, "example-field", data.FieldTypeInt64)
 	}
 }
 
@@ -149,21 +148,8 @@ func (jsonData *DatasourceSettingsJSONData) setDefaults() {
 	}
 }
 
-// There are two ways for using cookies through backend
-// 1. Manually specify them using Header with name 'Cookie' and value '<cookie_name>=<cookie_value>'
-// These are transmitted using jsonData.httpHeaderNameN and secureJsonData.httpHeaderValueN
-// 2. Specify which cookies to forward from Grafana
-// Grafana should access these cookies, while Thruk sets them. thruk_auth cookie looks something like this:
-// { "name": "thruk_auth", "value": "788599f61eb529b18a6a93f520b37c235a1e84e5bf26bfa0cca3cbebb4c06363_1", "domain": "192.168.202.202:3000", "hostOnly": true, "path": "/", "secure": false, "httpOnly": true, "sameSite": "lax", "session": true, "firstPartyDomain": "", "partitionKey": null, "storeId": null }
-// Which cookies are forwarded is specified in jsonData.KeepCookies
-// Cookies forwarded are put into the Request Headers like this:
-// Cookie thruk_auth=788599f61eb529b18a6a93f520b37c235a1e84e5bf26bfa0cca3cbebb4c06363_1; thruk_screen={"height":1010,"width":2421}
-func buildCookieJar(jsonData *DatasourceSettingsJSONData, secureJSONData *DatasourceSettingsSecureJSONData) {
-
-}
-
 // String returns a string representation of the DataSourceInstanceSettings.
-func StringDataSourceInstanceSettings(s *backend.DataSourceInstanceSettings) string {
+func DataSourceInstanceSettingsToString(s *backend.DataSourceInstanceSettings) string {
 	var jsonDataBytes []byte
 	jsonDataStr := "nil"
 	if s.JSONData != nil {

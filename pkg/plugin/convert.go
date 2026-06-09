@@ -10,7 +10,7 @@ import (
 	"github.com/grafana/grafana-plugin-sdk-go/data"
 )
 
-func toTime(v interface{}) time.Time {
+func anyToTime(v any) time.Time {
 	switch val := v.(type) {
 	case float64:
 		return time.Unix(int64(val), 0)
@@ -23,7 +23,7 @@ func toTime(v interface{}) time.Time {
 	return time.Time{}
 }
 
-func toFloat64(v interface{}) float64 {
+func anyToFloat64(v any) float64 {
 	switch val := v.(type) {
 	case float64:
 		return val
@@ -36,7 +36,7 @@ func toFloat64(v interface{}) float64 {
 	return 0
 }
 
-func toInt64(v interface{}) int64 {
+func anyToInt64(v any) int64 {
 	switch val := v.(type) {
 	case int64:
 		return val
@@ -51,7 +51,7 @@ func toInt64(v interface{}) int64 {
 	return 0
 }
 
-func toBool(v interface{}) bool {
+func anyToBool(v any) bool {
 	switch val := v.(type) {
 	case int64:
 		if v.(int64) == 1 {
@@ -74,7 +74,7 @@ func toBool(v interface{}) bool {
 	return false
 }
 
-func toString(v interface{}) string {
+func anyToString(v any) string {
 	switch val := v.(type) {
 	case string:
 		return val
@@ -93,13 +93,12 @@ func toString(v interface{}) string {
 // To get all possible types use something like this:
 // [root@ebc5fefa4b7c V1]# pwd
 // /src/thruk/lib/Thruk/Controller/Rest/V1
+// these types are defined in docs.pm and livestatus_docs.pm
 // [root@ebc5fefa4b7c V1]# grep -nrw '"type":' docs.pm > types.txt
+func inferFieldType(columnName string, columnMetadatas map[string]columnMetadata) (data.FieldType, string) {
+	if mc, ok := columnMetadatas[columnName]; ok {
 
-// parses the field types sent in Thruk function _get_columns_meta_for_path on API calls
-// https://github.com/sni/thruk/commit/8f56bb54633c48e33e1a6ed0ed6d5c5c8f2cc48f?diff=unified
-func inferFieldType(columnName string, metaColumns map[string]columnMetadata) (data.FieldType, string) {
-	if mc, ok := metaColumns[columnName]; ok {
-
+		// if the columnMetadata has a saved type, use it
 		if mc.GrafanaDataType != data.FieldTypeUnknown {
 			return mc.GrafanaDataType, mc.Type
 		}
@@ -135,17 +134,14 @@ func inferFieldType(columnName string, metaColumns map[string]columnMetadata) (d
 }
 
 // Parses the optional units added in Thruk function _get_columns_meta_for_path on API calls
-// https://github.com/sni/thruk/commit/8f56bb54633c48e33e1a6ed0ed6d5c5c8f2cc48f?diff=unified
-func modifyBasedOnUnitType(columnName string, metaColumns map[string]columnMetadata) {
-	if mc, ok := metaColumns[columnName]; ok {
+func processUnitType(columnName string, columnMetadatas map[string]columnMetadata) {
+	if mc, ok := columnMetadatas[columnName]; ok {
 		if mc.Config != nil {
-			if cnfConverted, convOk := mc.Config.(struct{ Unit string }); convOk {
-				switch cnfConverted.Unit {
+			if configStructConverted, convOk := mc.Config.(struct{ Unit string }); convOk {
+				switch configStructConverted.Unit {
 				case "%":
-					// TODO: percentages are given as direct numbers? like 0.34 or 34
 					return
 				case "s":
-					//
 					return
 				}
 			}

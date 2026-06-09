@@ -29,7 +29,7 @@ var (
 const defaultLimit = 1000
 
 // What a query coming in from Grafana will contain
-// Defined in types.ts as ThrukQuery
+// Defined in types.ts as ThrukQuery in frontend part.
 type queryModel struct {
 	Table     string   `json:"table"`
 	Columns   []string `json:"columns"`
@@ -44,7 +44,7 @@ type queryModel struct {
 // Most of the colum metadata only have "name"
 // Some might have "type" as well, taking values like: "time"
 // Some might have "config" which is a nested object like: { "unit" : "s"},
-// GrafanaDataType: added later, not present in Thruk Response
+// GrafanaDataType: added later, not present in Thruk Response. It serves to save the parsed Grafana SDK type in the same struct
 type columnMetadata struct {
 	Name            string         `json:"name"`
 	Type            string         `json:"type"`
@@ -62,13 +62,14 @@ type thrukMetadata struct {
 }
 
 // This type saves a wrapped_json type of Thruk response
-// { "data": [] , "meta": []}
-// docs/r-v1-hosts-response.json has an example of this
+// { "data": [] , "meta": [] }
 type thrukResponse struct {
 	Data []map[string]any `json:"data"`
 	Meta *thrukMetadata   `json:"meta"`
 }
 
+// This struct contains our own definition of the Datasource and the components it needs
+// It should implement CheckHealth() , Query() , Dispose() , CallResource() etc.
 type Datasource struct {
 	url        string
 	httpClient *http.Client
@@ -77,14 +78,15 @@ type Datasource struct {
 	uid        string
 }
 
-// ConfigEditor.tsx props has options
-// options has a jsonData field of type DataSourceSettings<T, S>
-// options.jsonData is of type T
-// in Config.Editor.tsx it uses ThrukDataSourceOptions as T
-// Configuration of a datasource is then sent as backend.DataSourceInstanceSettings
-// backend.DataSourceInstanceSettings.jsonData is of type json.RawMessage
-// parse it into this type, which reflects ThrukDataSourceOptions
-// ThrukDataSourceOptions in turn extends upon a default field configuration
+// ConfigEditor.tsx props is of type DataSourcePluginOptionsEditorProps<ThrukDataSourceOptions> , defined like this
+// DataSourcePluginOptionsEditorProps<JSONData extends DataSourceJsonData = DataSourceJsonData, SecureJSONData = {}>
+// DataSourcePluginOptionsEditorProps has a field called options, is of type: DataSourceSettings<JSONData, SecureJSONData>
+// in ConfigEditor.tsx it uses ThrukDataSourceOptions as T, which translates to  DataSourceSettings<JSONData>
+// DataSourceSettings has a field called jsonData of type T
+// Configuration of a datasource is then sent as type backend.DataSourceInstanceSettings
+// backend.DataSourceInstanceSettings has a field called jsonData, is of type json.RawMessage
+// parse it into this type, which reflects ThrukDataSourceOptions and some default options
+// ThrukDataSourceOptions extends DataSourceJsonData, is defined in types.ts
 type DatasourceSettingsJSONData struct {
 	KeepCookies     []string `json:"keepCookies"`
 	LogLevel        int64    `json:"logLevel"`
@@ -123,14 +125,16 @@ func NewDatasource(ctx context.Context, settings backend.DataSourceInstanceSetti
 	}
 	jsonData.setDefaults()
 
-	logger, logFile := createLogger(&jsonData)
-	logger.Printf("[NewDatasource] setttings:\n%s", StringDataSourceInstanceSettings(&settings))
+	logger, logFile := createLoggerFromDatasourceSettings(&jsonData)
+	logger.Printf("[NewDatasource] setttings:\n%s", DataSourceInstanceSettingsToString(&settings))
 
+	// SDK provides a way of building http client options directly from context
 	httpOpts, err := settings.HTTPClientOptions(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get http client options from context: %w", err)
 	}
 
+	// Always forward the headers, this is how cookies are passed
 	httpOpts.ForwardHTTPHeaders = true
 	httpOpts.Timeouts = &httpclient.TimeoutOptions{
 		Timeout: 30 * time.Second,
@@ -350,31 +354,36 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange ba
 	var thrukResp thrukResponse
 
 	// Try wrapped_json format: { "data": <array|object> , "meta": {...} }
-	var rawResp struct {
+	var rawResponse struct {
 		Data json.RawMessage `json:"data"`
 		Meta *thrukMetadata  `json:"meta"`
 	}
-	if err := json.Unmarshal(body, &rawResp); err == nil && rawResp.Data != nil {
-		thrukResp.Meta = rawResp.Meta
+
+	if err := json.Unmarshal(body, &rawResponse); err == nil && rawResponse.Data != nil {
+		thrukResp.Meta = rawResponse.Meta
 		// Try data as array first, then as single object
-		if err := json.Unmarshal(rawResp.Data, &thrukResp.Data); err != nil {
+		if err := json.Unmarshal(rawResponse.Data, &thrukResp.Data); err != nil {
+			// if unmarshalling did not work, it is probably a single json object
 			var dataObj map[string]any
-			if err2 := json.Unmarshal(rawResp.Data, &dataObj); err2 == nil {
+			if err2 := json.Unmarshal(rawResponse.Data, &dataObj); err2 == nil {
 				thrukResp.Data = []map[string]any{dataObj}
 			}
 		}
 	} else {
-		// Not wrapped_json - try plain array, then single object
-		var plainData []map[string]any
-		if err := json.Unmarshal(body, &plainData); err == nil {
-			thrukResp.Data = plainData
+		// Not wrapped_json
+
+		// Try as an array of jsonObjects
+		var arrayOfJsonObjects []map[string]any
+		if err := json.Unmarshal(body, &arrayOfJsonObjects); err == nil {
+			thrukResp.Data = arrayOfJsonObjects
 		} else {
-			var singleObj map[string]any
-			if err := json.Unmarshal(body, &singleObj); err != nil {
+			// Try as single JsonObject
+			var singleJsonObject map[string]any
+			if err := json.Unmarshal(body, &singleJsonObject); err != nil {
 				d.logger.Printf("[QueryData] failed to parse response: %v", err)
 				return backend.ErrDataResponse(backend.StatusBadRequest, fmt.Sprintf("failed to parse response: %v", err))
 			}
-			thrukResp.Data = []map[string]any{singleObj}
+			thrukResp.Data = []map[string]any{singleJsonObject}
 		}
 	}
 
@@ -383,7 +392,7 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange ba
 		return backend.DataResponse{Frames: data.Frames{data.NewFrame("response")}}
 	}
 
-	visType := parseVisType(qm.Type)
+	visType := parseVisualizationType(qm.Type)
 
 	if visType == "graph" {
 		return d.buildTimeseriesFrames(&thrukResp, timeRange, qm)
@@ -395,17 +404,20 @@ func (d *Datasource) parseThrukResponse(body []byte, qm queryModel, timeRange ba
 // This function assumes that thrukResponse.Data is of type []map[string]any
 // Even when the response was a single object, it is converted in parseThrukResponse method
 func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, visType string) backend.DataResponse {
-	// add known query types from query model and columns
-	addKnownGrafanaDataTypes(qm, thrukResp.Meta)
 
-	metaColumns := buildMetaColumnMap(thrukResp)
-	columns := determineColumns(thrukResp)
+	// add known query types from query model and columns
+	overrideKnownGrafanaDataTypes(qm, thrukResp.Meta)
+
+	columnMetadatas := buildColumnMetadataMap(thrukResp)
+	columns := determineColumnsFromThrukResponse(thrukResp)
 
 	frame := data.NewFrame("response")
 	for _, col := range columns {
 
+		processUnitType(col, columnMetadatas)
+
 		unknownFieldType := false
-		fieldType, metadataWritenType := inferFieldType(col, metaColumns)
+		fieldType, metadataWritenType := inferFieldType(col, columnMetadatas)
 		if fieldType == data.FieldTypeUnknown {
 			unknownFieldType = true
 			fieldType = data.FieldTypeString
@@ -420,8 +432,9 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 			val := row[col]
 			// d.logger.Printf("[TableFrame] [Column: %s] val: %v", col, val)
 
+			// unknown field types default to strings with white background
 			if unknownFieldType {
-				field.Append(toString(val))
+				field.Append(anyToString(val))
 				field.Config = &data.FieldConfig{
 					Description: "string",
 					Color:       map[string]any{"mode": "fixed", "fixedColor": "white"},
@@ -432,64 +445,53 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 
 			switch fieldType {
 			case data.FieldTypeInt64:
-				field.Append(toInt64(val))
+				field.Append(anyToInt64(val))
 				field.Config = &data.FieldConfig{
 					Description: "int64",
 					Color:       map[string]any{"mode": "fixed", "fixedColor": "blue"},
 					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
 			case data.FieldTypeFloat64:
-				field.Append(toFloat64(val))
+				field.Append(anyToFloat64(val))
 				field.Config = &data.FieldConfig{
 					Description: "float64",
 					Color:       map[string]any{"mode": "fixed", "fixedColor": "silver"},
 					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
 			case data.FieldTypeTime:
-				field.Append(toTime(val))
+				field.Append(anyToTime(val))
 				field.Config = &data.FieldConfig{
 					Description: "time",
 					Color:       map[string]any{"mode": "fixed", "fixedColor": "green"},
 					Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 				}
 			case data.FieldTypeBool:
-				field.Append(toBool(val))
+				field.Append(anyToBool(val))
+				// Bool fields have built in coloring , light green and light red
 				field.Config = &data.FieldConfig{
 					Description: "bool",
 					Custom:      map[string]any{"cellOptions": map[string]any{"mode": "thresholds", "type": "color-background"}},
-					Color: map[string]any{
-						"0":     "white",
-						"1":     "white",
-						"true":  "white",
-						"false": "white",
-					},
-					Thresholds: &data.ThresholdsConfig{
-						Mode: data.ThresholdsModeAbsolute,
-						Steps: []data.Threshold{
-							{Value: 0, Color: "white"},
-							{Value: 1, Color: "white"},
-							{Value: 0.0, Color: "white"},
-							{Value: 1.0, Color: "white"},
-						},
-					},
 				}
 			case data.FieldTypeString:
 				switch metadataWritenType {
+				// array of strings
+				// gets a different color, fuchisia
 				case "array_of_strings":
 					val2 := []string{}
 					if valAsAnyArray, ok := val.([]any); ok {
 						for _, elem := range valAsAnyArray {
-							val2 = append(val2, toString(elem))
+							val2 = append(val2, anyToString(elem))
 						}
 					}
-					field.Append(toString(val2))
+					field.Append(anyToString(val2))
 					field.Config = &data.FieldConfig{
 						Description: "string",
 						Color:       map[string]any{"mode": "fixed", "fixedColor": "fuchsia"},
 						Custom:      map[string]any{"cellOptions": map[string]any{"type": "color-background"}},
 					}
+				// normal string that is to be displayed as a string
 				default:
-					field.Append(toString(val))
+					field.Append(anyToString(val))
 					field.Config = &data.FieldConfig{
 						Description: "string",
 						Color:       map[string]any{"mode": "fixed", "fixedColor": "purple"},
@@ -498,7 +500,7 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 				}
 
 			default:
-				field.Append(toString(val))
+				field.Append(anyToString(val))
 				field.Config = &data.FieldConfig{
 					Description: "string",
 					Color:       map[string]any{"mode": "fixed", "fixedColor": "black"},
@@ -516,7 +518,7 @@ func (d *Datasource) buildTableFrame(qm *queryModel, thrukResp *thrukResponse, v
 }
 
 // buildTimeseriesFrames converts tabular Thruk data into Grafana time series frames.
-// This is the Go equivalent of the frontend's _fakeTimeseries() method.
+// This is the Go equivalent of the older frontend only plugin _fakeTimeseries() method.
 // Each data row becomes its own frame. Columns with aggregation functions (e.g. "count()")
 // or numeric values become the value column; remaining columns form the series alias.
 // The value is spread across 10 evenly-spaced time points covering the query's time range.
@@ -529,8 +531,8 @@ func (d *Datasource) buildTimeseriesFrames(thrukResp *thrukResponse, timeRange b
 		step = 1
 	}
 
-	metaColumns := buildMetaColumnMap(thrukResp)
-	columns := determineColumns(thrukResp)
+	metaColumns := buildColumnMetadataMap(thrukResp)
+	columns := determineColumnsFromThrukResponse(thrukResp)
 
 	// Use user-specified columns if provided, otherwise use all response columns
 	orderedColumns := columns
@@ -590,7 +592,7 @@ func (d *Datasource) buildTimeseriesFrames(thrukResp *thrukResponse, timeRange b
 
 		for i := 0; i < steps; i++ {
 			frame.Set(0, i, time.Unix(from+step*int64(i), 0).UTC())
-			frame.Set(1, i, toFloat64(val))
+			frame.Set(1, i, anyToFloat64(val))
 		}
 
 		frame.Meta = &data.FrameMeta{
@@ -602,12 +604,13 @@ func (d *Datasource) buildTimeseriesFrames(thrukResp *thrukResponse, timeRange b
 	return backend.DataResponse{Frames: frames}
 }
 
+// finds the column with numerical values to use in timeseries visualization
 func findValueColumn(columns []string, metaColumns map[string]columnMetadata, dataRows []map[string]any) string {
 	if len(columns) == 0 {
 		return ""
 	}
 
-	// First preference: column using aggregation function e.g. "count()"
+	// First preference: column using aggregation function e.g. "count()" , "max()"
 	for _, col := range columns {
 		if strings.Contains(col, "(") && strings.Contains(col, ")") {
 			return col
@@ -660,8 +663,8 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 			})
 		}
 		table = strings.TrimPrefix(table, "/")
-		thrukPath = "/r/v1/" + table + "?limit=1"
-		extraHeaders = map[string]string{"x-thruk-columns": "true"}
+		thrukPath = "/r/v1/" + table
+		extraHeaders = map[string]string{"X-Thruk-Output-Metadata-Only": "true"}
 	case "variable-query":
 		table := getQueryParam(req.URL, "table")
 		q := getQueryParam(req.URL, "q")
@@ -698,6 +701,18 @@ func (d *Datasource) CallResource(ctx context.Context, req *backend.CallResource
 	for k, v := range extraHeaders {
 		httpReq.Header.Set(k, v)
 	}
+
+	// switch req.Path {
+	// case "columns", "variable-query":
+	// 	cachedResult, err := getCachedResult(nil, d.uid, thrukURL, (*map[string][]string)(&httpReq.Header))
+	// 	if err != nil {
+	// 		d.logger.Printf("[CACHE] error when getting cached result: %s", err.Error())
+	// 	}
+	// 	if cachedResult != nil {
+	// 		d.logger.Printf("[CACHE] using cached result for query %s", thrukURL)
+	// 		return *cachedResult.result
+	// 	}
+	// }
 
 	start := time.Now()
 	resp, err := d.httpClient.Do(httpReq)

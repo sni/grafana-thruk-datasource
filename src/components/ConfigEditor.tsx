@@ -9,7 +9,7 @@ interface Props extends DataSourcePluginOptionsEditorProps<ThrukDataSourceOption
 export function ConfigEditor (props: Props) {
   const { onOptionsChange, options } = props;
 
-  const options2 = {
+  const optionsDefaulted = {
     ...options,
     jsonData: {
       ...options.jsonData,
@@ -47,13 +47,13 @@ export function ConfigEditor (props: Props) {
     <>
 
       <ConnectionSettings
-        config={options2}
+        config={optionsDefaulted}
         onChange={props.onOptionsChange}
       />
 
       <Auth
         {...convertLegacyAuthProps({
-          config: options2,
+          config: optionsDefaulted,
           onChange: props.onOptionsChange,
         })}
       />
@@ -65,7 +65,7 @@ export function ConfigEditor (props: Props) {
       >
 
         <AdvancedHttpSettings
-          config={options2}
+          config={optionsDefaulted}
           onChange={props.onOptionsChange}
         />
 
@@ -73,7 +73,7 @@ export function ConfigEditor (props: Props) {
           <Input
             id="config-editor-path"
             onChange={onLogLevelChange}
-            value={options.jsonData.logLevel}
+            value={optionsDefaulted.jsonData.logLevel}
             placeholder="Enter a numeric log level"
             width={40}
           />
@@ -83,7 +83,7 @@ export function ConfigEditor (props: Props) {
           <Input
             id="config-editor-path"
             onChange={onLogPathChange}
-            value={options.jsonData.logPath}
+            value={optionsDefaulted.jsonData.logPath}
             placeholder="Enter a log path"
             width={40}
           />
