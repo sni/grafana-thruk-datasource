@@ -1,18 +1,19 @@
 import defaults from 'lodash/defaults';
 import {
+  createDataFrame,
   DataQueryRequest,
   DataQueryResponse,
   DataQueryResponseData,
   DataSourceApi,
   DataSourceInstanceSettings,
   MetricFindValue,
-  MutableDataFrame,
   FieldType,
   TimeRange,
   ScopedVars,
   FieldSchema,
   AnnotationQuery,
   FieldConfig,
+  Field,
 } from '@grafana/data';
 import { BackendSrvRequest, getBackendSrv, toDataQueryResponse, getTemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable, throwError } from 'rxjs';
@@ -151,8 +152,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         throw new Error('Query failed, got no result data');
         return;
       }
+
       let meta = undefined;
-      let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
       if (!Array.isArray(target.result.data)) {
         if (target.result.data.data && target.result.data.meta) {
           meta = target.result.data.meta;
@@ -162,11 +163,19 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           target.result.data = [target.result.data];
         }
       }
+
+      let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
+      if (meta && meta.columns) {
+        meta.columns.forEach((column: ThrukColumnMetaColumn) => {
+          metaColumns[column.name] = column;
+        });
+      }
+
       let fields = columns[i].fields;
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
-          Object.keys(target.result.data[0]).forEach((key: string, i: number) => {
+          Object.keys(target.result.data[0]).forEach((key: string) => {
             fields.push(
               this.buildField(
                 metaColumns[key]?.name || key,
@@ -177,18 +186,31 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           });
         }
       }
+
       if (meta && meta.columns) {
-        meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
-          metaColumns[column.name] = column;
-          fields[i].name = column.name;
+        meta.columns.forEach((column: ThrukColumnMetaColumn) => {
+          const field = fields.find((f: FieldSchema) => f.name === column.name);
+          if (!field) {
+            return;
+          }
           if (column.type) {
-            fields[i].type = this.str2fieldType(column.type);
+            field.type = this.str2fieldType(column.type);
           }
           if (column.config) {
-            fields[i].config = column.config as FieldConfig;
+            field.config = column.config as FieldConfig;
           }
         });
       }
+
+      // ensure every field has a config with custom initialized for Grafana v12+ compatibility
+      fields.forEach((field: FieldSchema) => {
+        if (!field.config) {
+          field.config = {};
+        }
+        if (!field.config.custom) {
+          field.config.custom = {};
+        }
+      });
 
       // adjust number / time field types
       if (target.result && target.result.data && target.result.data.length > 0) {
@@ -213,23 +235,33 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         return;
       }
 
-      const frame = new MutableDataFrame({
+      const valueArrays: Record<string, any[]> = {};
+      fields.forEach((f: FieldSchema) => {
+        valueArrays[f.name] = [];
+      });
+      target.result.data.forEach((row: any) => {
+        fields.forEach((f: FieldSchema) => {
+          if (f.type === FieldType.time) {
+            valueArrays[f.name].push(row[f.name] * 1000);
+          } else {
+            valueArrays[f.name].push(row[f.name]);
+          }
+        });
+      });
+
+      const frameFields: Array<Partial<Field>> = fields.map((f: FieldSchema) => ({
+        name: f.name,
+        type: f.type,
+        config: f.config || { custom: {} },
+        values: valueArrays[f.name],
+      }));
+
+      const frame = createDataFrame({
         refId: query.refId,
         meta: {
           preferredVisualisationType: target.type,
         },
-        fields: fields,
-      });
-      target.result.data.forEach((row: any, j: number) => {
-        let dataRow: any[] = [];
-        fields.forEach((f: FieldSchema, j: number) => {
-          if (f.type === FieldType.time) {
-            dataRow.push(row[f.name] * 1000);
-          } else {
-            dataRow.push(row[f.name]);
-          }
-        });
-        frame.appendRow(dataRow);
+        fields: frameFields,
       });
       data.push(frame);
     });
@@ -250,11 +282,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       if (typeof type === 'string') {
         fType = this.str2fieldType(type);
       }
-      return { name: key, type: fType, config: config };
+      return { name: key, type: fType, config: { ...config, custom: config?.custom || {} } };
     }
     // seconds (from availability checks)
     if (key.match(/time_(down|up|unreachable|indeterminate|ok|warn|unknown|critical)/)) {
-      return { name: key, type: FieldType.number, config: { unit: 's' } };
+      return { name: key, type: FieldType.number, config: { unit: 's', custom: {} } };
     }
     // timestamp fields
     if (key.match(/^(last_|next_|start_|end_|time)/)) {
@@ -556,24 +588,22 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         });
       }
       let alias = names.join(';');
-      const frame = new MutableDataFrame({
+      const timeValues: number[] = [];
+      const valueValues: number[] = [];
+      for (let y = 0; y < steps; y++) {
+        timeValues.push((from + step * y) * 1000);
+        valueValues.push(val);
+      }
+      const frame = createDataFrame({
         refId: target.refId,
         meta: {
           preferredVisualisationType: 'graph',
         },
         fields: [
-          { name: 'time', type: FieldType.time },
-          { name: alias, type: FieldType.number },
+          { name: 'time', type: FieldType.time, values: timeValues },
+          { name: alias, type: FieldType.number, values: valueValues },
         ],
       });
-
-      for (let y = 0; y < steps; y++) {
-        let row: any = {
-          time: (from + step * y) * 1000,
-        };
-        row[alias] = val;
-        frame.add(row);
-      }
       response.push(frame);
     });
   }
