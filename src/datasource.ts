@@ -76,8 +76,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return [];
     }
 
-    let query = this.parseVariableQuery(this.replaceVariables(query_string));
-    let url = this.replaceVariables(query.table);
+    let query: ThrukQuery = this.parseVariableQuery(this.replaceVariables(query_string));
+    let url: string = this.replaceVariables(query.table);
     url += '?q=' + encodeURIComponent(this.replaceVariables(query.condition || ''));
     url += '&columns=' + encodeURIComponent(this.replaceVariables(query.columns.join(',')));
     url += '&limit=' + encodeURIComponent(this.replaceVariables((query.limit || defaultLimit).toString()));
@@ -110,11 +110,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return toDataQueryResponse({});
     }
 
-    let queries: any[] = [];
+    let queries: Array<Promise<any>> = [];
     let columns: ThrukColumnConfig[] = [];
 
     options.targets.map((target) => {
-      let col = this._buildColumns(target.columns);
+      let col: ThrukColumnConfig = this._buildColumns(target.columns);
 
       let path = target.table;
       path = path.replace(/^\//, '');
