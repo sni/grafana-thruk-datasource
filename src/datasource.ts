@@ -50,6 +50,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     };
   }
 
+  // This function needs to be implemented to extend DataSourceApi
   async testDatasource() {
     let url = '/thruk?columns=thruk_version';
     return this.request('GET', url)
@@ -67,7 +68,9 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       });
   }
 
-  // metricFindQuery gets called from variables page
+  // This function can optionally be implemented to extend DataSourceApi
+  // metricFindQuery gets called from variables page of a dashboard.
+  // user needs to pick a variable from a dropdown list, and this populates the list.
   async metricFindQuery(query_string: string, options?: any): Promise<MetricFindValue[]> {
     if (query_string === '') {
       return [];
@@ -87,6 +90,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     });
   }
 
+  // This function needs to be implemented to extend DataSourceApi
   // standard dashboard queries / explorer
   async query(options: DataQueryRequest<ThrukQuery>): Promise<DataQueryResponse> {
     const templateSrv = getTemplateSrv();
@@ -162,6 +166,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           target.result.data = [target.result.data];
         }
       }
+
+      // target.result.data is an array, each element is in form "columnName" : columnValue
+      // target.result.meta is an object
+      // target.result.meta.columns is an array, each element is an object with "name" attribute corresponding to columnName. These elements are of type ThrukColumnMetaColumn
       let fields = columns[i].fields;
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
@@ -423,6 +431,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     return url;
   }
 
+  // checks if url contains '?' to see if parameter part has started, and adds the parameter accordingly
   _appendUrlParam(url: string, param: string): string {
     if (url.match(/\?/)) {
       return url + '&' + param;
