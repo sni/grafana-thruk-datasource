@@ -458,12 +458,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       columns = [];
     }
     if (columns.length > 0) {
-      columns.forEach((col) => {
+      hasStats = columns.some((col) => {
         if (col.match(/^(.*)\(\)$/)) {
-          hasStats = true;
-          return false;
+          return true;
         }
-        return true;
+        return false;
       });
       let op: string | undefined;
       columns.forEach((col) => {
