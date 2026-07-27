@@ -1,18 +1,20 @@
 import defaults from 'lodash/defaults';
 import {
+  createDataFrame,
   DataQueryRequest,
   DataQueryResponse,
   DataQueryResponseData,
   DataSourceApi,
   DataSourceInstanceSettings,
   MetricFindValue,
-  MutableDataFrame,
   FieldType,
   TimeRange,
   ScopedVars,
   FieldSchema,
   AnnotationQuery,
   FieldConfig,
+  Field,
+  DataFrame,
 } from '@grafana/data';
 import { BackendSrvRequest, getBackendSrv, toDataQueryResponse, getTemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable, throwError } from 'rxjs';
@@ -221,23 +223,33 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         return;
       }
 
-      const frame = new MutableDataFrame({
+      const valueArrays: Record<string, any[]> = {};
+      fields.forEach((f: FieldSchema) => {
+        valueArrays[f.name] = [];
+      });
+      target.result.data.forEach((row: any) => {
+        fields.forEach((f: FieldSchema) => {
+          if (f.type === FieldType.time) {
+            valueArrays[f.name].push(row[f.name] * 1000);
+          } else {
+            valueArrays[f.name].push(row[f.name]);
+          }
+        });
+      });
+
+      const frameFields: Array<Partial<Field>> = fields.map((f: FieldSchema) => ({
+        name: f.name,
+        type: f.type,
+        config: f.config || { custom: {} },
+        values: valueArrays[f.name],
+      }));
+
+      const frame: DataFrame = createDataFrame({
         refId: query.refId,
         meta: {
           preferredVisualisationType: target.type,
         },
-        fields: fields,
-      });
-      target.result.data.forEach((row: any, j: number) => {
-        let dataRow: any[] = [];
-        fields.forEach((f: FieldSchema, j: number) => {
-          if (f.type === FieldType.time) {
-            dataRow.push(row[f.name] * 1000);
-          } else {
-            dataRow.push(row[f.name]);
-          }
-        });
-        frame.appendRow(dataRow);
+        fields: frameFields,
       });
       data.push(frame);
     });
@@ -564,24 +576,22 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         });
       }
       let alias = names.join(';');
-      const frame = new MutableDataFrame({
+      const timeValues: number[] = [];
+      const valueValues: number[] = [];
+      for (let y = 0; y < steps; y++) {
+        timeValues.push((from + step * y) * 1000);
+        valueValues.push(val);
+      }
+      const frame = createDataFrame({
         refId: target.refId,
         meta: {
           preferredVisualisationType: 'graph',
         },
         fields: [
-          { name: 'time', type: FieldType.time },
-          { name: alias, type: FieldType.number },
+          { name: 'time', type: FieldType.time, values: timeValues },
+          { name: alias, type: FieldType.number, values: valueValues },
         ],
       });
-
-      for (let y = 0; y < steps; y++) {
-        let row: any = {
-          time: (from + step * y) * 1000,
-        };
-        row[alias] = val;
-        frame.add(row);
-      }
       response.push(frame);
     });
   }
