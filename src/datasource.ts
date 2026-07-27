@@ -424,10 +424,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       headers,
     };
 
-    if (this.basicAuth || this.withCredentials) {
-      options.withCredentials = true;
-    }
     if (this.basicAuth) {
+      options.credentials = 'same-origin';
       options.headers = {
         Authorization: this.basicAuth,
       };
