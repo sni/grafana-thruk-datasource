@@ -1,0 +1,5 @@
+{
+    "json.schemaDownload.trustedDomains": {
+        "https://raw.githubusercontent.com/grafana/grafana/master/docs/sources/developers/plugins/plugin.schema.json": true
+    }
+}
