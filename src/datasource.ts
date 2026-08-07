@@ -159,7 +159,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       }
 
       // target.result saves the response of the API
-      // target.result.data may be an array or an seperate object
+      // target.result.data may be an array or an separate object
       // organize them into target.result.data and meta
       let meta = undefined;
       if (!Array.isArray(target.result.data)) {
@@ -450,6 +450,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     if (this.basicAuth) {
       options.credentials = 'same-origin';
       options.headers = {
+        ...(options.headers || {}),
         Authorization: this.basicAuth,
       };
     }

@@ -11,19 +11,19 @@ export interface ThrukQuery extends DataQuery {
   // In wrapped_json mode, the result looks like this
   /*
   {
-    "data" : [
+    "data": [
       {
-        "col1" : string1
-        "col2" : bool2
+        "col1" : string1,
+        "col2" : true,
         "col3" : ["string3_1","string3_2"]
       }
     ],
-    "meta" : {
-      "columns" : [
+    "meta": {
+      "columns": [
         {"name" : "col1"},
         {"name" : "col2"},
-        {"name" : "col10" , "type" : "time" }
-        {"name" : "col11" , "config": { "unit" : "s" }, "type" : "number" },
+        {"name" : "col10", "type" : "time" }
+        {"name" : "col11", "config": { "unit" : "s" }, "type" : "number" },
       ]
     }
   }
