@@ -20,7 +20,7 @@ services:
       buildwatch:
         condition: service_healthy # start as soon as the first build is ready
   buildwatch:
-    image: node:20
+    image: node:24
     command: bash -c "yarn install && yarn run dev"
     working_dir: /src
     healthcheck:
