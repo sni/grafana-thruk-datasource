@@ -332,8 +332,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       const matches = s.match(/(\w+)\s*=\s*\$time/);
       if (matches && matches[1]) {
         const field = matches[1];
-        let timeFilter = '(' + field + ' > ' + Math.floor(range.from.toDate().getTime() / 1000);
-        timeFilter += ' AND ' + field + ' < ' + Math.floor(range.to.toDate().getTime() / 1000);
+        let timeFilter = '(' + field + ' >= ' + Math.floor(range.from.toDate().getTime() / 1000);
+        timeFilter += ' AND ' + field + ' <= ' + Math.floor(range.to.toDate().getTime() / 1000);
         timeFilter += ')';
         s = s.replace(matches[0], timeFilter);
       }

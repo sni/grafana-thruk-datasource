@@ -35,7 +35,7 @@ describe('replaceVariables', () => {
       from: { toDate: () => new Date(1700000000000) },
       to: { toDate: () => new Date(1700003600000) },
     } as any;
-    expect(ds.replaceVariables('time = $time', range)).toEqual('(time > 1700000000 AND time < 1700003600)');
+    expect(ds.replaceVariables('time = $time', range)).toEqual('(time >= 1700000000 AND time <= 1700003600)');
   });
 
   test('expands multi-value regex filter into OR clauses', () => {
