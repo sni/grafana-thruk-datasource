@@ -367,7 +367,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         if (httpError.data) {
           if (httpError.data.response) {
             let matches = httpError.data.response.match(/<h1>(.*?)<\/h1>/);
-            if (matches[1] && matches[1] !== httpError.statusText) {
+            if (matches && matches[1] && matches[1] !== httpError.statusText) {
               extra = ' (' + matches[1] + ')';
             }
           }
