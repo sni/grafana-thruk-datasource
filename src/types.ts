@@ -46,7 +46,6 @@ export interface ThrukColumnConfig {
   columns: string[]; // raw string columns in the query
   fields: FieldSchema[]; // fieldSchema stores information about the column required by grafana api
   hasColumns: boolean;
-  hasStats: boolean;
 }
 
 export interface ThrukColumnMeta {

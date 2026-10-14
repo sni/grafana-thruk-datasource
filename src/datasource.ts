@@ -474,7 +474,6 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
   _buildColumns(columns?: string[]): ThrukColumnConfig {
     let hasColumns = false;
-    let hasStats = false;
     const newColumns: string[] = [];
     const fields: FieldSchema[] = [];
 
@@ -483,12 +482,6 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       cols = [];
     }
     if (cols.length > 0) {
-      hasStats = cols.some((col) => {
-        if (col.match(/^(.*)\(\)$/)) {
-          return true;
-        }
-        return false;
-      });
       let op: string | undefined;
       cols.forEach((col) => {
         const matches = col.match(/^(.*)\(\)$/);
@@ -506,7 +499,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       });
       hasColumns = true;
     }
-    return { columns: newColumns, fields: fields, hasColumns: hasColumns, hasStats: hasStats };
+    return { columns: newColumns, fields: fields, hasColumns: hasColumns };
   }
 
   _fakeTimeseries(
