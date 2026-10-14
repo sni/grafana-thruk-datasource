@@ -41,6 +41,12 @@ prettier:
 prettiercheck:
 	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) npx prettier --check --ignore-unknown src/
 
+eslint:
+	$(DOCKER)    --name $(PLUGINNAME)-buildeslint    node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) run lint"
+
+eslintfix:
+	$(DOCKER)    --name $(PLUGINNAME)-buildeslint    node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) run lint --fix"
+
 buildshell:
 	$(DOCKER) -i --name $(PLUGINNAME)-buildshell   node:$(NODEVERSION) bash
 
