@@ -46,7 +46,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     this.annotations = {
       prepareQuery(anno: AnnotationQuery<ThrukQuery>): ThrukQuery | undefined {
-        let target = anno.target;
+        const target = anno.target;
         return target;
       },
     };
@@ -54,7 +54,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
   // This function needs to be implemented to extend DataSourceApi
   async testDatasource() {
-    let url = '/thruk?columns=thruk_version';
+    const url = '/thruk?columns=thruk_version';
     return this.request('GET', url)
       .then((response) => {
         if (response.status === 200 && response.data.thruk_version) {
@@ -78,14 +78,14 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return [];
     }
 
-    let query: ThrukQuery = this.parseVariableQuery(this.replaceVariables(query_string));
+    const query: ThrukQuery = this.parseVariableQuery(this.replaceVariables(query_string));
     let url: string = this.replaceVariables(query.table);
     url += '?q=' + encodeURIComponent(this.replaceVariables(query.condition || ''));
     url += '&columns=' + encodeURIComponent(this.replaceVariables(query.columns.join(',')));
     url += '&limit=' + encodeURIComponent(this.replaceVariables((query.limit || defaultLimit).toString()));
 
     return this.request('GET', url).then((response) => {
-      let key = query.columns[0];
+      const key = query.columns[0];
       return response.data.map((row: any) => {
         return { text: row[key], value: row[key] };
       });
@@ -100,7 +100,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     // set defaults and replace template variables
     options.targets.map((target) => {
-      target = defaults(target, defaultQuery);
+      defaults(target, defaultQuery);
       target.table = this.replaceVariables(target.table, undefined, options.scopedVars);
       target.limit = Number(templateSrv.replace(String(target.limit || defaultLimit)));
     });
@@ -112,11 +112,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return toDataQueryResponse({});
     }
 
-    let queries: Array<Promise<any>> = [];
-    let columns: ThrukColumnConfig[] = [];
+    const queries: Array<Promise<any>> = [];
+    const columns: ThrukColumnConfig[] = [];
 
     options.targets.map((target) => {
-      let col: ThrukColumnConfig = this._buildColumns(target.columns);
+      const col: ThrukColumnConfig = this._buildColumns(target.columns);
 
       let path = target.table;
       path = path.replace(/^\//, '');
@@ -176,14 +176,14 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       // target.result.meta is an object
       // target.result.meta.columns is an array, each element is an object with "name" attribute corresponding to columnName. These elements are of type ThrukColumnMetaColumn
 
-      let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
+      const metaColumns: Record<string, ThrukColumnMetaColumn> = {};
       if (meta && meta.columns) {
         meta.columns.forEach((column: ThrukColumnMetaColumn) => {
           metaColumns[column.name] = column;
         });
       }
 
-      let fields = columns[i].fields;
+      const fields = columns[i].fields;
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
@@ -321,45 +321,45 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
   replaceVariables(str: string, range?: TimeRange, scopedVars?: ScopedVars) {
     const templateSrv = getTemplateSrv();
-    str = templateSrv.replace(str, scopedVars, function (s: any) {
-      if (s && Array.isArray(s)) {
-        return '^(' + s.join('|') + ')$';
+    let s = templateSrv.replace(str, scopedVars, function (v: any) {
+      if (v && Array.isArray(v)) {
+        return '^(' + v.join('|') + ')$';
       }
-      return s;
+      return v;
     });
 
     // replace time filter
     if (range) {
-      let matches = str.match(/(\w+)\s*=\s*\$time/);
+      const matches = s.match(/(\w+)\s*=\s*\$time/);
       if (matches && matches[1]) {
-        let field = matches[1];
+        const field = matches[1];
         let timeFilter = '(' + field + ' > ' + Math.floor(range.from.toDate().getTime() / 1000);
         timeFilter += ' AND ' + field + ' < ' + Math.floor(range.to.toDate().getTime() / 1000);
         timeFilter += ')';
-        str = str.replace(matches[0], timeFilter);
+        s = s.replace(matches[0], timeFilter);
       }
     }
 
     // fixup list regex filters
-    let regex = new RegExp(/([\w_]+)\s*(>=|=)\s*"\^\((.*?)\)\$"/);
-    let matches = str.match(regex);
+    const regex = new RegExp(/([\w_]+)\s*(>=|=)\s*"\^\((.*?)\)\$"/);
+    let matches = s.match(regex);
     while (matches) {
-      let groups: string[] = [];
-      let segments = matches[3].split('|');
-      segments.forEach((s) => {
+      const groups: string[] = [];
+      const segments = matches[3].split('|');
+      segments.forEach((seg) => {
         if (matches !== null) {
-          groups.push(matches[1] + ' ' + matches[2] + ' "' + s + '"');
+          groups.push(matches[1] + ' ' + matches[2] + ' "' + seg + '"');
         }
       });
-      str = str.replace(matches[0], '(' + groups.join(' OR ') + ')');
-      matches = str.match(regex);
+      s = s.replace(matches[0], '(' + groups.join(' OR ') + ')');
+      matches = s.match(regex);
     }
 
-    return str;
+    return s;
   }
 
   parseVariableQuery(query: string): ThrukQuery {
-    let tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*?))(|\s+LIMIT\s+(\d+))\s*$/i);
+    const tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*?))(|\s+LIMIT\s+(\d+))\s*$/i);
     if (!tmp) {
       throw new Error(
         'query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>] [LIMIT <limit>]'
@@ -377,7 +377,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
   async request(method: string, url: string, data?: any, headers?: BackendSrvRequest['headers']): Promise<any> {
     try {
-      let result = await lastValueFrom(this._request(method, url, data, headers));
+      const result = await lastValueFrom(this._request(method, url, data, headers));
       let resultData = result.data;
       if (!Array.isArray(resultData)) {
         if (resultData && resultData.data && resultData.meta) {
@@ -404,12 +404,12 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         throw error;
       }
 
-      let httpError = error as { status: number; statusText: string; data?: any };
+      const httpError = error as { status: number; statusText: string; data?: any };
       if (httpError.status) {
         let extra = '';
         if (httpError.data) {
           if (httpError.data.response) {
-            let matches = httpError.data.response.match(/<h1>(.*?)<\/h1>/);
+            const matches = httpError.data.response.match(/<h1>(.*?)<\/h1>/);
             if (matches && matches[1] && matches[1] !== httpError.statusText) {
               extra = ' (' + matches[1] + ')';
             }
@@ -460,9 +460,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
   _buildUrl(url: string): string {
     this.url = this.url?.replace(/\/$/, '');
-    url = url.replace(/^\//, '');
-    url = this.url + '/r/v1/' + url;
-    return url;
+    const path = url.replace(/^\//, '');
+    return this.url + '/r/v1/' + path;
   }
 
   // checks if url contains '?' to see if parameter part has started, and adds the parameter accordingly
@@ -477,11 +476,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     if (value === undefined || value == null) {
       return value;
     }
-    let matches = value.match(/^\/?\^?\{(.*)\}\$?\/?$/);
+    const matches = value.match(/^\/?\^?\{(.*)\}\$?\/?$/);
     if (!matches) {
       return value;
     }
-    let values = matches[1].split(/,/);
+    const values = matches[1].split(/,/);
     for (let x = 0; x < values.length; x++) {
       values[x] = values[x].replace(/\//, '\\/');
     }
@@ -491,34 +490,33 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
   _buildColumns(columns?: string[]): ThrukColumnConfig {
     let hasColumns = false;
     let hasStats = false;
-    let newColumns: string[] = [];
-    let fields: FieldSchema[] = [];
+    const newColumns: string[] = [];
+    const fields: FieldSchema[] = [];
 
-    if (!columns) {
-      columns = [];
+    let cols: string[] = columns || [];
+    if (cols.length === 0 || (cols.length === 1 && cols[0] === '*')) {
+      cols = [];
     }
-    if (columns.length === 0 || (columns.length === 1 && columns[0] === '*')) {
-      columns = [];
-    }
-    if (columns.length > 0) {
-      hasStats = columns.some((col) => {
+    if (cols.length > 0) {
+      hasStats = cols.some((col) => {
         if (col.match(/^(.*)\(\)$/)) {
           return true;
         }
         return false;
       });
       let op: string | undefined;
-      columns.forEach((col) => {
-        let matches = col.match(/^(.*)\(\)$/);
+      cols.forEach((col) => {
+        const matches = col.match(/^(.*)\(\)$/);
         if (matches && matches[1]) {
           op = matches[1];
         } else {
+          let c = col;
           if (op) {
-            col = op + '(' + col + ')';
+            c = op + '(' + col + ')';
             op = undefined;
           }
-          fields.push(this.buildField(col));
-          newColumns.push(col);
+          fields.push(this.buildField(c));
+          newColumns.push(c);
         }
       });
       hasColumns = true;
@@ -533,10 +531,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     options: DataQueryRequest<ThrukQuery>,
     columns: ThrukColumnConfig
   ) {
-    let steps = 10;
-    let from = options.range.from.unix();
-    let to = options.range.to.unix();
-    let step = Math.floor((to - from) / steps);
+    const steps = 10;
+    const from = options.range.from.unix();
+    const to = options.range.to.unix();
+    const step = Math.floor((to - from) / steps);
 
     if (data.length === 0) {
       return;
@@ -547,17 +545,19 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       orderedColumns = columns.columns;
     }
 
+    let rows: any[] = data;
+
     // convert single row results with multiple columns into usable data rows
-    if (data.length === 1 && orderedColumns.length > 2) {
-      let converted: any[] = [];
+    if (rows.length === 1 && orderedColumns.length > 2) {
+      const converted: any[] = [];
       orderedColumns.forEach((key) => {
         converted.push([key, data[0][key]]);
       });
-      data = converted;
+      rows = converted;
     }
 
-    let valueCol: string[] = [];
-    let nameCol: string[] = [];
+    const valueCol: string[] = [];
+    const nameCol: string[] = [];
     // find first column using aggregation function and use this as value
     orderedColumns.forEach((key) => {
       if (key.match(/^\w+\(.*\)$/)) {
@@ -587,8 +587,8 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     });
 
     // create timeseries based on group by keys
-    data.forEach((row) => {
-      let val = row[valueCol[0]];
+    rows.forEach((row) => {
+      const val = row[valueCol[0]];
       let names: string[] = [];
       if (nameCol.length === 0) {
         names = [valueCol[0]];
@@ -597,7 +597,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           names.push(row[key]);
         });
       }
-      let alias = names.join(';');
+      const alias = names.join(';');
       const timeValues: number[] = [];
       const valueValues: number[] = [];
       for (let y = 0; y < steps; y++) {

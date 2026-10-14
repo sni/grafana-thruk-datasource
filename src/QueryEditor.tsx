@@ -145,8 +145,8 @@ export const QueryEditor = (props: Props) => {
     ...draggableStyle,
   });
 
-  let outputRef = useRef(null);
-  let copyBtn = useRef(null);
+  const outputRef = useRef(null);
+  const copyBtn = useRef(null);
   return (
     <>
       <div className="gf-form">
@@ -219,7 +219,7 @@ export const QueryEditor = (props: Props) => {
                                 queryDefaulted.columns[index] = v.value;
                               }
                               // remove '*' from list
-                              let i = queryDefaulted.columns.indexOf('*');
+                              const i = queryDefaulted.columns.indexOf('*');
                               if (i !== -1) {
                                 queryDefaulted.columns.splice(i, 1);
                               }
@@ -253,7 +253,7 @@ export const QueryEditor = (props: Props) => {
           onChange={(v) => {
             queryDefaulted.columns.push(v.value);
             // remove '*' from list
-            let i = queryDefaulted.columns.indexOf('*');
+            const i = queryDefaulted.columns.indexOf('*');
             if (i !== -1) {
               queryDefaulted.columns.splice(i, 1);
             }
@@ -286,7 +286,7 @@ export const QueryEditor = (props: Props) => {
           placeholder={defaultLimit.toString()}
           value={queryDefaulted.limit?.toString()}
           onChange={(v) => {
-            let limit = Number(v.currentTarget.value);
+            const limit = Number(v.currentTarget.value);
             if (limit <= 0) {
               onValueChange('limit', defaultLimit);
             } else {
@@ -326,7 +326,7 @@ export const QueryEditor = (props: Props) => {
           onChange={(v) => {
             if (outputRef.current) {
               if ((outputRef.current as any) instanceof HTMLInputElement) {
-                let inp = outputRef.current as HTMLInputElement;
+                const inp = outputRef.current as HTMLInputElement;
                 inp.value = encodeURIComponent(v.currentTarget.value);
               }
             }
@@ -343,14 +343,14 @@ export const QueryEditor = (props: Props) => {
           onClick={(e) => {
             if (outputRef.current) {
               if ((outputRef.current as any) instanceof HTMLInputElement) {
-                let inp = outputRef.current as HTMLInputElement;
+                const inp = outputRef.current as HTMLInputElement;
                 try {
                   if (navigator.clipboard) {
                     navigator.clipboard.writeText(inp.value);
                   }
                   if (copyBtn.current) {
                     if ((copyBtn.current as any) instanceof HTMLButtonElement) {
-                      let btn = copyBtn.current as HTMLButtonElement;
+                      const btn = copyBtn.current as HTMLButtonElement;
                       btn.style.transition = '';
                       btn.style.backgroundColor = '#00b500';
                       setTimeout(() => {
