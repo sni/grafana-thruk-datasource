@@ -1,11 +1,13 @@
 node_modules
 npm-debug.log
-*.*~
+.*~
 coverage/
 dist/
-.yarnrc
 .npm/
 .bash_history
 .cache/
 *.zip
 .eslintcache
+.yarn/install-state.gz
+.yarn/*
+!.yarn/patches

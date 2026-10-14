@@ -21,7 +21,7 @@ services:
         condition: service_healthy # start as soon as the first build is ready
   buildwatch:
     image: node:24
-    command: bash -c "yarn install && yarn run dev"
+    command: bash -c "corepack yarn install && corepack yarn run dev"
     working_dir: /src
     healthcheck:
       test: test -f /src/dist/module.js

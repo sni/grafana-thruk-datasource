@@ -7,10 +7,11 @@ DOCKER=docker run \
 		-w "/src" \
 		-u $(shell id -u):$(shell id -g) \
 		-e "HOME=/src" \
+		-e "COREPACK_ENABLE_DOWNLOAD_PROMPT=0" \
 		-e "GRAFANA_ACCESS_POLICY_TOKEN=$(GRAFANA_ACCESS_POLICY_TOKEN)"
 NODEVERSION=24
 export NODE_PATH=$(shell pwd)/node_modules
-YARN=yarn
+YARN=corepack yarn
 SHELL=bash
 
 build:
@@ -64,10 +65,10 @@ dev:
 
 clean:
 	-docker compose rm -f
-	-sudo chown $(shell id -u):$(shell id -g) -R dist node_modules
+	-sudo chown $(shell id -u) -R dist node_modules >/dev/null 2>&1 || true
 	rm -rf dist
 	rm -rf node_modules
-	rm -rf .yarnrc
+	rm -rf .yarn
 	rm -rf .npm
 
 releasebuild:
