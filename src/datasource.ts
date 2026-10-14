@@ -1,18 +1,20 @@
 import defaults from 'lodash/defaults';
 import {
+  createDataFrame,
   DataQueryRequest,
   DataQueryResponse,
   DataQueryResponseData,
   DataSourceApi,
   DataSourceInstanceSettings,
   MetricFindValue,
-  MutableDataFrame,
   FieldType,
   TimeRange,
   ScopedVars,
   FieldSchema,
   AnnotationQuery,
   FieldConfig,
+  Field,
+  DataFrame,
 } from '@grafana/data';
 import { BackendSrvRequest, getBackendSrv, toDataQueryResponse, getTemplateSrv } from '@grafana/runtime';
 import { lastValueFrom, Observable, throwError } from 'rxjs';
@@ -50,6 +52,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     };
   }
 
+  // This function needs to be implemented to extend DataSourceApi
   async testDatasource() {
     let url = '/thruk?columns=thruk_version';
     return this.request('GET', url)
@@ -67,14 +70,16 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       });
   }
 
-  // metricFindQuery gets called from variables page
+  // This function can optionally be implemented to extend DataSourceApi
+  // metricFindQuery gets called from variables page of a dashboard.
+  // user needs to pick a variable from a dropdown list, and this populates the list.
   async metricFindQuery(query_string: string, options?: any): Promise<MetricFindValue[]> {
     if (query_string === '') {
       return [];
     }
 
-    let query = this.parseVariableQuery(this.replaceVariables(query_string));
-    let url = this.replaceVariables(query.table);
+    let query: ThrukQuery = this.parseVariableQuery(this.replaceVariables(query_string));
+    let url: string = this.replaceVariables(query.table);
     url += '?q=' + encodeURIComponent(this.replaceVariables(query.condition || ''));
     url += '&columns=' + encodeURIComponent(this.replaceVariables(query.columns.join(',')));
     url += '&limit=' + encodeURIComponent(this.replaceVariables((query.limit || defaultLimit).toString()));
@@ -87,6 +92,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     });
   }
 
+  // This function needs to be implemented to extend DataSourceApi
   // standard dashboard queries / explorer
   async query(options: DataQueryRequest<ThrukQuery>): Promise<DataQueryResponse> {
     const templateSrv = getTemplateSrv();
@@ -106,11 +112,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return toDataQueryResponse({});
     }
 
-    let queries: any[] = [];
+    let queries: Array<Promise<any>> = [];
     let columns: ThrukColumnConfig[] = [];
 
     options.targets.map((target) => {
-      let col = this._buildColumns(target.columns);
+      let col: ThrukColumnConfig = this._buildColumns(target.columns);
 
       let path = target.table;
       path = path.replace(/^\//, '');
@@ -146,13 +152,16 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       });
     });
 
+    // one query can contain multiple targets
     options.targets.map((target, i: number) => {
       if (!target.result || !target.result.data) {
         throw new Error('Query failed, got no result data');
-        return;
       }
+
+      // target.result saves the response of the API
+      // target.result.data may be an array or an separate object
+      // organize them into target.result.data and meta
       let meta = undefined;
-      let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
       if (!Array.isArray(target.result.data)) {
         if (target.result.data.data && target.result.data.meta) {
           meta = target.result.data.meta;
@@ -162,11 +171,23 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           target.result.data = [target.result.data];
         }
       }
+
+      // target.result.data is an array, each element is in form "columnName" : columnValue
+      // target.result.meta is an object
+      // target.result.meta.columns is an array, each element is an object with "name" attribute corresponding to columnName. These elements are of type ThrukColumnMetaColumn
+
+      let metaColumns: Record<string, ThrukColumnMetaColumn> = {};
+      if (meta && meta.columns) {
+        meta.columns.forEach((column: ThrukColumnMetaColumn) => {
+          metaColumns[column.name] = column;
+        });
+      }
+
       let fields = columns[i].fields;
       if (!columns[i].hasColumns) {
         // extract columns from first result row if no columns given
         if (target.result && target.result.data && target.result.data.length > 0) {
-          Object.keys(target.result.data[0]).forEach((key: string, i: number) => {
+          Object.keys(target.result.data[0]).forEach((key: string) => {
             fields.push(
               this.buildField(
                 metaColumns[key]?.name || key,
@@ -177,18 +198,30 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           });
         }
       }
+
       if (meta && meta.columns) {
-        meta.columns.forEach((column: ThrukColumnMetaColumn, i: number) => {
-          metaColumns[column.name] = column;
-          fields[i].name = column.name;
+        meta.columns.forEach((column: ThrukColumnMetaColumn) => {
+          const field = fields.find((f: FieldSchema) => f.name === column.name);
+          if (!field) {
+            return;
+          }
           if (column.type) {
-            fields[i].type = this.str2fieldType(column.type);
+            field.type = this.str2fieldType(column.type);
           }
           if (column.config) {
-            fields[i].config = column.config as FieldConfig;
+            field.config = column.config as FieldConfig;
           }
         });
       }
+
+      fields.forEach((field: FieldSchema) => {
+        if (!field.config) {
+          field.config = {};
+        }
+        if (!field.config.custom) {
+          field.config.custom = {};
+        }
+      });
 
       // adjust number / time field types
       if (target.result && target.result.data && target.result.data.length > 0) {
@@ -213,23 +246,33 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         return;
       }
 
-      const frame = new MutableDataFrame({
+      const valueArrays: Record<string, any[]> = {};
+      fields.forEach((f: FieldSchema) => {
+        valueArrays[f.name] = [];
+      });
+      target.result.data.forEach((row: any) => {
+        fields.forEach((f: FieldSchema) => {
+          if (f.type === FieldType.time) {
+            valueArrays[f.name].push(row[f.name] * 1000);
+          } else {
+            valueArrays[f.name].push(row[f.name]);
+          }
+        });
+      });
+
+      const frameFields: Array<Partial<Field>> = fields.map((f: FieldSchema) => ({
+        name: f.name,
+        type: f.type,
+        config: f.config || { custom: {} },
+        values: valueArrays[f.name],
+      }));
+
+      const frame: DataFrame = createDataFrame({
         refId: query.refId,
         meta: {
           preferredVisualisationType: target.type,
         },
-        fields: fields,
-      });
-      target.result.data.forEach((row: any, j: number) => {
-        let dataRow: any[] = [];
-        fields.forEach((f: FieldSchema, j: number) => {
-          if (f.type === FieldType.time) {
-            dataRow.push(row[f.name] * 1000);
-          } else {
-            dataRow.push(row[f.name]);
-          }
-        });
-        frame.appendRow(dataRow);
+        fields: frameFields,
       });
       data.push(frame);
     });
@@ -250,11 +293,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       if (typeof type === 'string') {
         fType = this.str2fieldType(type);
       }
-      return { name: key, type: fType, config: config };
+      return { name: key, type: fType, config: { ...config, custom: config?.custom || {} } };
     }
     // seconds (from availability checks)
     if (key.match(/time_(down|up|unreachable|indeterminate|ok|warn|unknown|critical)/)) {
-      return { name: key, type: FieldType.number, config: { unit: 's' } };
+      return { name: key, type: FieldType.number, config: { unit: 's', custom: {} } };
     }
     // timestamp fields
     if (key.match(/^(last_|next_|start_|end_|time)/)) {
@@ -404,11 +447,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       headers,
     };
 
-    if (this.basicAuth || this.withCredentials) {
-      options.withCredentials = true;
-    }
     if (this.basicAuth) {
+      options.credentials = 'same-origin';
       options.headers = {
+        ...(options.headers || {}),
         Authorization: this.basicAuth,
       };
     }
@@ -423,6 +465,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     return url;
   }
 
+  // checks if url contains '?' to see if parameter part has started, and adds the parameter accordingly
   _appendUrlParam(url: string, param: string): string {
     if (url.match(/\?/)) {
       return url + '&' + param;
@@ -458,12 +501,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       columns = [];
     }
     if (columns.length > 0) {
-      columns.forEach((col) => {
+      hasStats = columns.some((col) => {
         if (col.match(/^(.*)\(\)$/)) {
-          hasStats = true;
-          return false;
+          return true;
         }
-        return true;
+        return false;
       });
       let op: string | undefined;
       columns.forEach((col) => {
@@ -556,24 +598,22 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
         });
       }
       let alias = names.join(';');
-      const frame = new MutableDataFrame({
+      const timeValues: number[] = [];
+      const valueValues: number[] = [];
+      for (let y = 0; y < steps; y++) {
+        timeValues.push((from + step * y) * 1000);
+        valueValues.push(val);
+      }
+      const frame = createDataFrame({
         refId: target.refId,
         meta: {
           preferredVisualisationType: 'graph',
         },
         fields: [
-          { name: 'time', type: FieldType.time },
-          { name: alias, type: FieldType.number },
+          { name: 'time', type: FieldType.time, values: timeValues },
+          { name: alias, type: FieldType.number, values: valueValues },
         ],
       });
-
-      for (let y = 0; y < steps; y++) {
-        let row: any = {
-          time: (from + step * y) * 1000,
-        };
-        row[alias] = val;
-        frame.add(row);
-      }
       response.push(frame);
     });
   }

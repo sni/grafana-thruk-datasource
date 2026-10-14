@@ -3,11 +3,31 @@ import { DataQuery } from '@grafana/schema';
 
 export interface ThrukQuery extends DataQuery {
   table: string;
-  columns: string[];
+  columns: string[]; // raw string columns
   condition: string;
   limit: number;
   type: 'table' | 'graph' | 'logs' | 'timeseries';
 
+  // In wrapped_json mode, the result looks like this
+  /*
+  {
+    "data": [
+      {
+        "col1" : string1,
+        "col2" : true,
+        "col3" : ["string3_1","string3_2"]
+      }
+    ],
+    "meta": {
+      "columns": [
+        {"name" : "col1"},
+        {"name" : "col2"},
+        {"name" : "col10", "type" : "time" }
+        {"name" : "col11", "config": { "unit" : "s" }, "type" : "number" },
+      ]
+    }
+  }
+  */
   result?: any;
 }
 
@@ -23,8 +43,8 @@ export interface ThrukDataSourceOptions extends DataSourceJsonData {
 }
 
 export interface ThrukColumnConfig {
-  columns: string[];
-  fields: FieldSchema[];
+  columns: string[]; // raw string columns in the query
+  fields: FieldSchema[]; // fieldSchema stores information about the column required by grafana api
   hasColumns: boolean;
   hasStats: boolean;
 }
