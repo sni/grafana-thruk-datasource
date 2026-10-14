@@ -3,6 +3,11 @@
 next:
     - fix timeseries picker
     - fix using complex queries in variables
+    - fix $time filter to use inclusive >=/<= as documented
+    - fix panel duplication error
+    - support multi-column SELECT in variable queries
+    - fix query editor mutating the shared query columns
+    - fix error handling for non-HTML error bodies
 
 2.2.3  2025-09-24
     - cache columns and tables in the query builder
