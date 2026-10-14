@@ -121,6 +121,19 @@ export const QueryEditor = (props: Props) => {
     debouncedRunQuery();
   };
 
+  // operate on a copy of columns to avoid mutating props.query
+  const commitColumns = (cols: string[]) => {
+    const i = cols.indexOf('*');
+    if (i !== -1) {
+      cols.splice(i, 1);
+    }
+    if (cols.length === 0) {
+      cols.push('*');
+    }
+    props.onChange({ ...queryDefaulted, columns: cols });
+    debouncedRunQuery();
+  };
+
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) {
       return;
@@ -212,22 +225,14 @@ export const QueryEditor = (props: Props) => {
                             width={'auto'}
                             minWidth={5}
                             onChange={(v) => {
+                              const cols = [...queryDefaulted.columns];
                               if (v === null) {
                                 // remove segment
-                                queryDefaulted.columns.splice(index, 1);
+                                cols.splice(index, 1);
                               } else {
-                                queryDefaulted.columns[index] = v.value;
+                                cols[index] = v.value;
                               }
-                              // remove '*' from list
-                              const i = queryDefaulted.columns.indexOf('*');
-                              if (i !== -1) {
-                                queryDefaulted.columns.splice(i, 1);
-                              }
-                              if (queryDefaulted.columns.length === 0) {
-                                queryDefaulted.columns.push('*');
-                              }
-                              props.onChange(queryDefaulted);
-                              debouncedRunQuery();
+                              commitColumns(cols);
                             }}
                           />
                         </InlineLabel>
@@ -251,14 +256,9 @@ export const QueryEditor = (props: Props) => {
             });
           }}
           onChange={(v) => {
-            queryDefaulted.columns.push(v.value);
-            // remove '*' from list
-            const i = queryDefaulted.columns.indexOf('*');
-            if (i !== -1) {
-              queryDefaulted.columns.splice(i, 1);
-            }
-            props.onChange(queryDefaulted);
-            debouncedRunQuery();
+            const cols = [...queryDefaulted.columns];
+            cols.push(v.value);
+            commitColumns(cols);
           }}
           inputMinWidth={200}
         />
