@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.3.0  2026-10-14
     - fix timeseries picker
     - fix using complex queries in variables
     - fix $time filter to use inclusive >=/<= as documented
