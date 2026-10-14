@@ -325,7 +325,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     return {
       table: tmp[2],
-      columns: [tmp[1]],
+      columns: tmp[1].split(',').map((c) => c.trim()),
       condition: tmp[4],
       limit: Number(tmp[6] || defaultLimit),
       type: 'table',
