@@ -87,9 +87,15 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     );
 
     return this.request('GET', url).then((response) => {
-      const key = query.columns[0];
-      return response.data.map((row: any) => {
-        return { text: row[key], value: row[key] };
+      const rows = response.data || [];
+      // use the first column of the result, query.columns can't be trusted
+      // for expressions like concat(a, '-', b) as x
+      const key = rows.length > 0 ? Object.keys(rows[0])[0] : '';
+      return rows.map((row: any) => {
+        // grafana's toMetricFindValues only accepts string/number/null values
+        const v = row[key];
+        const text = v == null ? '' : String(v);
+        return { text, value: text };
       });
     });
   }

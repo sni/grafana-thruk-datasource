@@ -60,7 +60,7 @@ already or use aggregation functions like, `avg`, `sum`, `min`, `max` or `count`
 
 ## Timeseries based panels
 
-Althouth Thruk isn't a timeseries databases und usually only returns table
+Although Thruk isn't a timeseries databases und usually only returns table
 data, some queries can be converted to fake timeseries if the panel cannot
 handle table data.
 
@@ -100,6 +100,22 @@ which is the same as
     SELECT time, message FROM /alerts WHERE host_name = "$host" AND time = $time
 
 ![Variables](https://raw.githubusercontent.com/sni/grafana-thruk-datasource/master/img/variables.png "Variables Editor")
+
+Example:
+
+Define site names as `site` variable to use them in queries later:
+
+Query:
+
+    SELECT concat(id, "-", name) as id FROM sites
+
+Regex:
+
+    /^(?<value>.*)\-(?<text>.*)$/
+
+Then use it like this in the FROM url of the dashboard panels:
+
+    /sites/${site:csv}/services/totals
 
 ## Development
 

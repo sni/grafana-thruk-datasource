@@ -86,3 +86,36 @@ describe('_buildColumns', () => {
     expect(result.fields[0].type).toBe('time');
   });
 });
+
+describe('metricFindQuery', () => {
+  beforeEach(() => {
+    (getTemplateSrv as jest.Mock).mockReturnValue({
+      replace: (str: string) => str,
+    });
+  });
+
+  test('uses the first column of the result rows as value', async () => {
+    const ds = new DataSource({} as any);
+    // the value key comes from the result, not the parsed query, so
+    // expressions like concat(a, '-', b) as x work; non-string values are
+    // coerced because grafana's toMetricFindValues only accepts
+    // string/number/null
+    (ds as any).request = jest.fn().mockResolvedValue({
+      data: [{ id: 'abc-1' }, { id: 42 }, { id: null }, {}],
+    });
+    const result = await ds.metricFindQuery('SELECT concat(id, "-", name) as id FROM sites');
+    expect(result).toEqual([
+      { text: 'abc-1', value: 'abc-1' },
+      { text: '42', value: '42' },
+      { text: '', value: '' },
+      { text: '', value: '' },
+    ]);
+  });
+
+  test('returns no values for empty result', async () => {
+    const ds = new DataSource({} as any);
+    (ds as any).request = jest.fn().mockResolvedValue({ data: [] });
+    const result = await ds.metricFindQuery('SELECT name FROM /hosts');
+    expect(result).toEqual([]);
+  });
+});

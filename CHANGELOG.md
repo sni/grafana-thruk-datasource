@@ -2,6 +2,7 @@
 
 next:
     - fix timeseries picker
+    - fix using complex queries in variables
 
 2.2.3  2025-09-24
     - cache columns and tables in the query builder
