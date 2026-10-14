@@ -472,21 +472,6 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     return url + '?' + param;
   }
 
-  _fixup_regex(value: any) {
-    if (value === undefined || value == null) {
-      return value;
-    }
-    const matches = value.match(/^\/?\^?\{(.*)\}\$?\/?$/);
-    if (!matches) {
-      return value;
-    }
-    const values = matches[1].split(/,/);
-    for (let x = 0; x < values.length; x++) {
-      values[x] = values[x].replace(/\//, '\\/');
-    }
-    return '/^(' + values.join('|') + ')$/';
-  }
-
   _buildColumns(columns?: string[]): ThrukColumnConfig {
     let hasColumns = false;
     let hasStats = false;
