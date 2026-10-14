@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - fix timeseries picker
+
 2.2.3  2025-09-24
     - cache columns and tables in the query builder
 

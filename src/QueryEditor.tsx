@@ -307,7 +307,7 @@ export const QueryEditor = (props: Props) => {
             { label: 'Logs', value: 'logs' },
           ]}
           onChange={(v) => {
-            onValueChange('type', v);
+            onValueChange('type', v ? v.value : 'table');
           }}
           isClearable={false}
           createCustomValue={false}
