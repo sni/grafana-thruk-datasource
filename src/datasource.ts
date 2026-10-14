@@ -1,4 +1,4 @@
-import defaults from 'lodash/defaults';
+import { defaults, isNumber } from 'lodash';
 import {
   createDataFrame,
   DataQueryRequest,
@@ -20,7 +20,6 @@ import { BackendSrvRequest, getBackendSrv, toDataQueryResponse, getTemplateSrv }
 import { lastValueFrom, Observable, throwError } from 'rxjs';
 
 import { ThrukQuery, ThrukDataSourceOptions, defaultQuery, ThrukColumnConfig, ThrukColumnMetaColumn } from './types';
-import { isNumber } from 'lodash';
 
 export const defaultLimit = 1000;
 
