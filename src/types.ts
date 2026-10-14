@@ -48,10 +48,6 @@ export interface ThrukColumnConfig {
   hasColumns: boolean;
 }
 
-export interface ThrukColumnMeta {
-  columns: ThrukColumnMetaColumn[];
-}
-
 export interface ThrukColumnMetaColumn {
   name: string;
   type: string;
