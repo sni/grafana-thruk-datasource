@@ -145,6 +145,16 @@ test('parse variables query', async () => {
   expect(result.limit).toEqual(137);
 });
 
+test.each(['', ' WHERE state = 0 LIMIT 25'])('parses variable query URL parameters%s', (suffix) => {
+  const ds = new DataSource({} as any);
+  const table = '/hosts?x=1&name=web-1.example%20host&tags=a,b';
+  const result = ds.parseVariableQuery('SELECT name FROM ' + table + suffix);
+  expect(result.table).toBe(table);
+  expect(result.columns).toEqual(['name']);
+  expect(result.condition).toBe(suffix ? 'state = 0' : undefined);
+  expect(result.limit).toBe(suffix ? 25 : 1000);
+});
+
 describe('replaceVariables', () => {
   beforeEach(() => {
     (getTemplateSrv as jest.Mock).mockReturnValue({
@@ -232,6 +242,19 @@ describe('metricFindQuery', () => {
     (getTemplateSrv as jest.Mock).mockReturnValue({
       replace: (str: string) => str,
     });
+  });
+
+  test('preserves FROM parameters when appending variable query parameters', async () => {
+    const ds = new DataSource({} as any);
+    const request = jest.spyOn(ds, 'request').mockResolvedValue({ data: [{ name: 'host1' }] });
+    const result = await ds.metricFindQuery('SELECT name FROM /hosts?x=1&site=west%20dc WHERE state = 0 LIMIT 25');
+    const url = new URL(request.mock.calls[0][1], 'https://thruk.example');
+    expect(url.searchParams.get('x')).toBe('1');
+    expect(url.searchParams.get('site')).toBe('west dc');
+    expect(url.searchParams.get('q')).toBe('state = 0');
+    expect(url.searchParams.get('columns')).toBe('name');
+    expect(url.searchParams.get('limit')).toBe('25');
+    expect(result).toEqual([{ text: 'host1', value: 'host1' }]);
   });
 
   test('uses the first column of the result rows as value', async () => {

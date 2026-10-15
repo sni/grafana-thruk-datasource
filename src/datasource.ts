@@ -364,7 +364,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
   }
 
   parseVariableQuery(query: string): ThrukQuery {
-    const tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+([\w_\/]+)(|\s+WHERE\s+(.*?))(|\s+LIMIT\s+(\d+))\s*$/i);
+    const tmp = query.match(/^\s*SELECT\s+(.+)\s+FROM\s+(\S+)(|\s+WHERE\s+(.*?))(|\s+LIMIT\s+(\d+))\s*$/i);
     if (!tmp) {
       throw new Error(
         'query syntax error, expecting: SELECT <column>[,<columns>] FROM <rest url> [WHERE <filter conditions>] [LIMIT <limit>]'
