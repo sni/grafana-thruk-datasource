@@ -1,8 +1,0 @@
-{
-  "extends": "./.config/.eslintrc",
-  "rules": {
-    "no-param-reassign": "warn",
-    "prefer-const": "warn",
-    "no-var": "warn"
-  }
-}
