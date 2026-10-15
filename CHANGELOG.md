@@ -1,8 +1,14 @@
 ### Changelog
 
-next:
+2.3.1  2026-10-15
     - fix release workflow
     - update and cleanup dependencies
+    - fix single-row multi-column timeseries
+    - fix timeseries spacing for short time ranges
+    - fix unset timestamps rendering as epoch dates
+    - fix replacement of repeated $time filters
+    - fix time range and scoped variables in variable queries
+    - support URL parameters in variable query FROM paths
 
 2.3.0  2026-10-14
     - fix timeseries picker
