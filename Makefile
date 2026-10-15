@@ -20,27 +20,32 @@ build:
 buildwatch:
 	$(DOCKER) -i --name $(PLUGINNAME)-buildwatch   node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) run dev"
 
+# the only targets allowed to modify package.json/yarn.lock (immutable installs are off for them)
 buildupgrade:
-	rm -f package-lock.json
-	$(DOCKER)    --name $(PLUGINNAME)-buildupgrade node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) upgrade $(filter-out $@,$(MAKECMDGOALS))"
+	$(DOCKER)    --name $(PLUGINNAME)-buildupgrade node:$(NODEVERSION) bash -c "YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) install && YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) upgrade $(filter-out $@,$(MAKECMDGOALS))"
 
 buildyarn:
-	$(DOCKER)    --name $(PLUGINNAME)-buildyarn    node:$(NODEVERSION) bash -c "$(YARN) $(filter-out $@,$(MAKECMDGOALS))"
+	$(DOCKER)    --name $(PLUGINNAME)-buildyarn    node:$(NODEVERSION) bash -c "YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) $(filter-out $@,$(MAKECMDGOALS))"
+
+# re-resolve and prune yarn.lock after manual package.json edits (removes orphaned entries)
+lockfile:
+	$(DOCKER)    --name $(PLUGINNAME)-buildlockfile node:$(NODEVERSION) bash -c "YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) install --mode=update-lockfile"
 
 buildaudit:
 	$(DOCKER)    --name $(PLUGINNAME)-buildaudit   node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) npm audit"
 
 buildsign:
-	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx @grafana/sign-plugin"
+	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install @grafana/sign-plugin"
 
 buildnpm:
 	$(DOCKER)    --name $(PLUGINNAME)-buildnpm     node:$(NODEVERSION) bash -c "npm $(filter-out $@,$(MAKECMDGOALS))"
 
+# --no-install: only use the lockfile-pinned local binaries, never a downloaded @latest
 prettier:
-	$(DOCKER)    --name $(PLUGINNAME)-buildpret    node:$(NODEVERSION) npx prettier --write --ignore-unknown src/
+	$(DOCKER)    --name $(PLUGINNAME)-buildpret    node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install prettier --write --ignore-unknown src/"
 
 prettiercheck:
-	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) npx prettier --check --ignore-unknown src/
+	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install prettier --check --ignore-unknown src/"
 
 eslint:
 	$(DOCKER)    --name $(PLUGINNAME)-buildeslint    node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) run lint"
@@ -52,9 +57,9 @@ buildshell:
 	$(DOCKER) -i --name $(PLUGINNAME)-buildshell   node:$(NODEVERSION) bash
 
 jesttest:
-	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) npx jest test
+	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install jest test"
 
-test: build prettiercheck jesttest
+test: build prettiercheck jesttest eslint buildaudit
 
 # start a specific grafana version like:
 # GRAFANA_VERSION=11.0.0 make dev
@@ -68,7 +73,7 @@ clean:
 	-sudo chown $(shell id -u) -R dist node_modules >/dev/null 2>&1 || true
 	rm -rf dist
 	rm -rf node_modules
-	rm -rf .yarn
+	rm -rf .yarn/install-state.gz .yarn/berry
 	rm -rf .npm
 
 releasebuild:

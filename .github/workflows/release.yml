@@ -24,6 +24,11 @@ jobs:
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
 
+      # same node version as Makefile/docker-compose/.nvmrc (native @swc/core rebuilds must match)
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
       - name: Enable corepack (yarn 4)
         run: corepack enable
 
