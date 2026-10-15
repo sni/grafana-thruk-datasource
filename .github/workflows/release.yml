@@ -4,6 +4,7 @@ on:
   push:
     tags:
       - 'v*' # Run workflow on version tags, e.g. v1.0.0.
+  workflow_dispatch: # for testing: manual runs fail the version check before any release is created
 
 jobs:
   release:
@@ -14,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+
+      - name: Enable corepack (yarn 4)
+        run: corepack enable
 
       - uses: grafana/plugin-actions/build-plugin@main
         with:
