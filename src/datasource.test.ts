@@ -67,7 +67,11 @@ describe('replaceVariables', () => {
 
   test('replaces every $time filter without changing longer variable names', () => {
     const ds = new DataSource({} as any);
-    const range = { from: dateTime(1700000000000), to: dateTime(1700003600000) };
+    const range = {
+      from: dateTime(1700000000000),
+      to: dateTime(1700003600000),
+      raw: { from: 'now-1h', to: 'now' },
+    };
     expect(ds.replaceVariables('(start = $time AND end=$time) OR time = $timezone', range)).toBe(
       '((start >= 1700000000 AND start <= 1700003600) AND (end >= 1700000000 AND end <= 1700003600)) OR time = $timezone'
     );
@@ -147,5 +151,25 @@ describe('metricFindQuery', () => {
     (ds as any).request = jest.fn().mockResolvedValue({ data: [] });
     const result = await ds.metricFindQuery('SELECT name FROM /hosts');
     expect(result).toEqual([]);
+  });
+
+  test('uses the dashboard range and scoped variables before building the URL', async () => {
+    const ds = new DataSource({} as any);
+    const scopedVars = { host: { text: 'server1', value: 'server1' } };
+    const replace = jest.fn((str: string, vars: typeof scopedVars) => str.replace('$host', vars.host.value));
+    (getTemplateSrv as jest.Mock).mockReturnValue({ replace });
+    const request = jest.spyOn(ds, 'request').mockResolvedValue({ data: [] });
+
+    await ds.metricFindQuery('SELECT message FROM /hosts/$host/alerts WHERE time = $time', {
+      range: { from: dateTime(1700000000000), to: dateTime(1700003600000) },
+      scopedVars,
+    });
+
+    expect(replace).toHaveBeenCalledWith(expect.any(String), scopedVars, expect.any(Function));
+    const url = new URL(request.mock.calls[0][1], 'https://thruk.example');
+    expect(url.pathname).toBe('/hosts/server1/alerts');
+    expect(url.searchParams.get('q')).toBe('(time >= 1700000000 AND time <= 1700003600)');
+    expect(url.searchParams.get('columns')).toBe('message');
+    expect(url.searchParams.get('limit')).toBe('1000');
   });
 });

@@ -77,14 +77,13 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       return [];
     }
 
-    const query: ThrukQuery = this.parseVariableQuery(this.replaceVariables(query_string));
-    let url: string = this.replaceVariables(query.table);
-    url = this._appendUrlParam(url, 'q=' + encodeURIComponent(this.replaceVariables(query.condition || '')));
-    url = this._appendUrlParam(url, 'columns=' + encodeURIComponent(this.replaceVariables(query.columns.join(','))));
-    url = this._appendUrlParam(
-      url,
-      'limit=' + encodeURIComponent(this.replaceVariables((query.limit || defaultLimit).toString()))
+    const query: ThrukQuery = this.parseVariableQuery(
+      this.replaceVariables(query_string, options?.range, options?.scopedVars)
     );
+    let url: string = query.table;
+    url = this._appendUrlParam(url, 'q=' + encodeURIComponent(query.condition || ''));
+    url = this._appendUrlParam(url, 'columns=' + encodeURIComponent(query.columns.join(',')));
+    url = this._appendUrlParam(url, 'limit=' + encodeURIComponent((query.limit || defaultLimit).toString()));
 
     return this.request('GET', url).then((response) => {
       const rows = response.data || [];
