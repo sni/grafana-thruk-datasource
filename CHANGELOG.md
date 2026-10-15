@@ -1,5 +1,9 @@
 ### Changelog
 
+next:
+    - fix release workflow
+    - update and cleanup dependencies
+
 2.3.0  2026-10-14
     - fix timeseries picker
     - fix using complex queries in variables
