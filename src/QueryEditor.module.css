@@ -1,3 +1,7 @@
+.row {
+  display: flex;
+  flex-wrap: nowrap;
+}
 .DNDList {
   padding: 0 12px;
   cursor: grab;

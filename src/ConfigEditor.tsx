@@ -20,7 +20,7 @@ export class ConfigEditor extends React.PureComponent<Props, State> {
     };
 
     return (
-      <div className="gf-form-group">
+      <div>
         <>
           <DataSourceHttpSettings
             defaultUrl={'http://127.0.0.1/sitename/thruk'}

@@ -162,7 +162,7 @@ export const QueryEditor = (props: Props) => {
   const copyBtn = useRef(null);
   return (
     <>
-      <div className="gf-form">
+      <div className={styles.row}>
         <SegmentSection label="FROM">
           <></>
         </SegmentSection>
@@ -188,7 +188,7 @@ export const QueryEditor = (props: Props) => {
           <InlineLabel> </InlineLabel>
         </InlineField>
       </div>
-      <div className="gf-form" style={{ width: '100%' }}>
+      <div className={styles.row} style={{ width: '100%' }}>
         <SegmentSection label="SELECT">
           <></>
         </SegmentSection>
@@ -266,7 +266,7 @@ export const QueryEditor = (props: Props) => {
           <InlineLabel> </InlineLabel>
         </InlineField>
       </div>
-      <div className="gf-form">
+      <div className={styles.row}>
         <SegmentSection label="WHERE">
           <></>
         </SegmentSection>
@@ -278,7 +278,7 @@ export const QueryEditor = (props: Props) => {
           }}
         />
       </div>
-      <div className="gf-form">
+      <div className={styles.row}>
         <SegmentSection label="LIMIT">
           <></>
         </SegmentSection>
