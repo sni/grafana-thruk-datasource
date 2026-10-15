@@ -34,6 +34,20 @@ describe('query', () => {
     (getTemplateSrv as jest.Mock).mockReturnValue({ replace: (str: string) => str });
   });
 
+  test.each([5000, 500])('keeps timeseries points distinct and in a %i ms range', async (duration) => {
+    const ds = new DataSource({} as any);
+    jest.spyOn(ds, 'request').mockResolvedValue({ data: [{ name: 'host1', count: 3 }] });
+    const from = 1700000000123;
+    const result = await ds.query({
+      targets: [{ refId: 'A', table: '/hosts', type: 'timeseries', columns: ['name', 'count'] }],
+      range: { from: dateTime(from), to: dateTime(from + duration) },
+    } as unknown as DataQueryRequest<ThrukQuery>);
+    const frame = result.data[0] as DataFrame;
+    expect(frame.fields[0].values).toEqual(Array.from({ length: 10 }, (_, i) => from + (duration / 10) * i));
+    expect(frame.fields[1].name).toBe('host1');
+    expect(frame.fields[1].values).toEqual(Array(10).fill(3));
+  });
+
   test('keeps unset timestamps empty and converts valid seconds to milliseconds', async () => {
     const ds = new DataSource({} as any);
     jest.spyOn(ds, 'request').mockResolvedValue({

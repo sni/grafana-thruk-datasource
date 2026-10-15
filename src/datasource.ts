@@ -515,9 +515,9 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     columns: ThrukColumnConfig
   ) {
     const steps = 10;
-    const from = options.range.from.unix();
-    const to = options.range.to.unix();
-    const step = Math.floor((to - from) / steps);
+    const from = options.range.from.valueOf();
+    const to = options.range.to.valueOf();
+    const step = (to - from) / steps;
 
     if (data.length === 0) {
       return;
@@ -586,7 +586,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       const timeValues: number[] = [];
       const valueValues: number[] = [];
       for (let y = 0; y < steps; y++) {
-        timeValues.push((from + step * y) * 1000);
+        timeValues.push(from + step * y);
         valueValues.push(val);
       }
       const frame = createDataFrame({
