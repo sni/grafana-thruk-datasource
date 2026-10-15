@@ -39,7 +39,7 @@ buildosv:
 	$(DOCKER)    --name $(PLUGINNAME)-buildosv     ghcr.io/google/osv-scanner:latest --lockfile /src/yarn.lock
 
 buildsign:
-	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install @grafana/sign-plugin"
+	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --yes @grafana/sign-plugin@3.3.3"
 
 buildnpm:
 	$(DOCKER)    --name $(PLUGINNAME)-buildnpm     node:$(NODEVERSION) bash -c "npm $(filter-out $@,$(MAKECMDGOALS))"
