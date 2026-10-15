@@ -45,7 +45,7 @@
     "@types/react": "^18.2.0",
     "@typescript-eslint/eslint-plugin": "^8.9.0",
     "@typescript-eslint/parser": "^8.9.0",
-    "copy-webpack-plugin": "^11.0.0",
+    "copy-webpack-plugin": "^14.0.0",
     "css-loader": "^6.7.3",
     "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.0",
@@ -80,5 +80,14 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "tslib": "2.6.3"
+  },
+  "resolutions": {
+    "@opentelemetry/core": "2.8.0",
+    "basic-ftp": "6.2.3",
+    "dompurify": "3.4.17",
+    "immutable@npm:5.1.5": "5.1.8",
+    "moment": "2.31.0",
+    "react-use": "17.6.1",
+    "uuid@npm:11.0.5": "11.1.1"
   }
 }
