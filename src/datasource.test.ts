@@ -1,10 +1,32 @@
 import { DataSource } from 'datasource';
 import { getTemplateSrv } from '@grafana/runtime';
+import { DataFrame, DataQueryRequest, dateTime } from '@grafana/data';
+import { ThrukQuery } from './types';
 
 jest.mock('@grafana/runtime', () => ({
   ...jest.requireActual('@grafana/runtime'),
   getTemplateSrv: jest.fn(),
 }));
+
+test('single-row stats produce a named timeseries for each column', () => {
+  const ds = new DataSource({} as any);
+  const data: DataFrame[] = [];
+  const row = { num_services_ok: 5, num_services_warn: 0, num_services_crit: 2 };
+  ds._fakeTimeseries(
+    data,
+    { refId: 'A' } as ThrukQuery,
+    [row],
+    { range: { from: dateTime(1700000000000), to: dateTime(1700003600000) } } as DataQueryRequest<ThrukQuery>,
+    ds._buildColumns(Object.keys(row))
+  );
+
+  expect(data).toHaveLength(3);
+  data.forEach((frame, i) => {
+    expect(frame.refId).toBe('A');
+    expect(frame.fields[1].name).toBe(Object.keys(row)[i]);
+    expect(frame.fields[1].values).toEqual(Array(10).fill(Object.values(row)[i]));
+  });
+});
 
 // test parsing variables query
 test('parse variables query', async () => {

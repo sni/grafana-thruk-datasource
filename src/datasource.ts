@@ -574,9 +574,11 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     // create timeseries based on group by keys
     rows.forEach((row) => {
-      const val = row[valueCol[0]];
+      const val = Array.isArray(row) ? row[1] : row[valueCol[0]];
       let names: string[] = [];
-      if (nameCol.length === 0) {
+      if (Array.isArray(row)) {
+        names = [row[0]];
+      } else if (nameCol.length === 0) {
         names = [valueCol[0]];
       } else {
         nameCol.forEach((key) => {
