@@ -1,5 +1,8 @@
 ### Changelog
 
+next:
+    - improve query editor layout
+
 2.3.1  2026-10-15
     - fix release workflow
     - update and cleanup dependencies
