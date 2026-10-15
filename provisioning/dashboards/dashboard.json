@@ -927,7 +927,7 @@
       "hideTimepicker": false,
       "fiscalYearStartMonth": 0
     },
-    "title": "Thruk Test Dashboard Copy",
+    "title": "Thruk Test Dashboard",
     "variables": [
       {
         "kind": "QueryVariable",
