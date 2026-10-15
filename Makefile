@@ -64,6 +64,7 @@ jesttest:
 	$(DOCKER)    --name $(PLUGINNAME)-buildprtchck node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install jest test"
 
 test: build prettiercheck jesttest eslint buildaudit
+	-$(MAKE) buildosv
 
 # start a specific grafana version like:
 # GRAFANA_VERSION=11.0.0 make dev
