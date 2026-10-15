@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-  workflow_dispatch: # for testing: manual runs fail the version check before any release is created
+  workflow_dispatch:
     inputs:
       debug_enabled:
         type: boolean
@@ -32,8 +32,18 @@ jobs:
       - name: Enable corepack (yarn 4)
         run: corepack enable
 
-      - uses: grafana/plugin-actions/build-plugin@main
+      - name: Run pre-release checks
+        if: ${{ github.event_name != 'push' || github.ref_type != 'tag' }}
+        uses: grafana/plugin-actions/package-plugin@main
         with:
+          node-version: 24
+          policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
+
+      - name: Build release
+        if: ${{ github.event_name == 'push' && github.ref_type == 'tag' }}
+        uses: grafana/plugin-actions/build-plugin@main
+        with:
+          node-version: 24
           # see https://grafana.com/developers/plugin-tools/publish-a-plugin/sign-a-plugin#generate-an-access-policy-token to generate it
           # save the value in your repository secrets
           policy_token: ${{ secrets.GRAFANA_ACCESS_POLICY_TOKEN }}
