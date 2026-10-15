@@ -34,6 +34,10 @@ lockfile:
 buildaudit:
 	$(DOCKER)    --name $(PLUGINNAME)-buildaudit   node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) npm audit"
 
+# runs the same lockfile scan the grafana release validator runs (osv-scanner / osv.dev)
+buildosv:
+	$(DOCKER)    --name $(PLUGINNAME)-buildosv     ghcr.io/google/osv-scanner:latest --lockfile /src/yarn.lock
+
 buildsign:
 	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --no-install @grafana/sign-plugin"
 
