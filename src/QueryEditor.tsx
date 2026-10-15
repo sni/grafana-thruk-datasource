@@ -247,7 +247,7 @@ export const QueryEditor = (props: Props) => {
         </DragDropContext>
         <SegmentAsync
           value={'+'}
-          style={{ width: 'auto', padding: '0 4px' }}
+          className={styles.ColumnPlusBtn}
           loadOptions={(filter?: string): Promise<SelectableValue[]> => {
             return loadColumns(filter).then((data) => {
               return data.map((item) => {

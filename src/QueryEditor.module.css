@@ -3,7 +3,6 @@
   flex-wrap: nowrap;
 }
 .DNDList {
-  padding: 0 12px;
   cursor: grab;
   overflow-y: hidden;
 }
@@ -18,4 +17,12 @@ DIV.DNDList DIV:first-child LABEL.DNDLabel {
   padding: 0 4px;
   margin: 0;
   cursor: text;
+}
+.ColumnPlusBtn {
+  width: auto;
+  padding: 0 12px;
+  font-size: 16px;
+}
+.ColumnPlusBtn:hover {
+  background: lightblue;
 }
