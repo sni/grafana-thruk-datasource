@@ -16,9 +16,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses:  abbbi/github-actions-tune@v1
+
       - name: Setup tmate session, see https://github.com/marketplace/actions/debugging-with-tmate
         uses: mxschmitt/action-tmate@v3
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.debug_enabled }}
+
       - name: make test
         run: make test
