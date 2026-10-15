@@ -2,6 +2,7 @@ import { DataSource } from 'datasource';
 import { getTemplateSrv } from '@grafana/runtime';
 import { DataFrame, DataQueryRequest, dateTime } from '@grafana/data';
 import { ThrukQuery } from './types';
+import { of, throwError } from 'rxjs';
 
 jest.mock('@grafana/runtime', () => ({
   ...jest.requireActual('@grafana/runtime'),
@@ -25,6 +26,84 @@ test('single-row stats produce a named timeseries for each column', () => {
     expect(frame.refId).toBe('A');
     expect(frame.fields[1].name).toBe(Object.keys(row)[i]);
     expect(frame.fields[1].values).toEqual(Array(10).fill(Object.values(row)[i]));
+  });
+});
+
+describe('query', () => {
+  beforeEach(() => {
+    (getTemplateSrv as jest.Mock).mockReturnValue({ replace: (str: string) => str });
+  });
+
+  test.each([['*'], ['label', 'count', 'checked']])(
+    'builds a frame from wrapped_json with columns %j',
+    async (...columns) => {
+      const ds = new DataSource({} as any);
+      const request = jest.spyOn(ds, 'request').mockResolvedValue({
+        data: {
+          data: [{ label: 'host1', count: 3, checked: 1700000000 }],
+          meta: {
+            columns: [
+              { name: 'label', type: 'string' },
+              { name: 'count', type: 'number', config: { unit: 'short' } },
+              { name: 'checked', type: 'time' },
+            ],
+          },
+        },
+      });
+
+      const result = await ds.query({
+        targets: [{ refId: 'A', table: '/hosts', type: 'table', columns }],
+      } as unknown as DataQueryRequest<ThrukQuery>);
+
+      expect(request).toHaveBeenCalledWith('GET', expect.stringContaining('hosts?limit=1000'), null, {
+        'X-THRUK-OutputFormat': 'wrapped_json',
+      });
+      expect(result.data).toHaveLength(1);
+      const frame = result.data[0] as DataFrame;
+      expect(frame.refId).toBe('A');
+      expect(frame.meta?.preferredVisualisationType).toBe('table');
+      expect(frame.fields.map(({ name, type, values }) => ({ name, type, values }))).toEqual([
+        { name: 'label', type: 'string', values: ['host1'] },
+        { name: 'count', type: 'number', values: [3] },
+        { name: 'checked', type: 'time', values: [1700000000000] },
+      ]);
+      expect(frame.fields[1].config.unit).toBe('short');
+    }
+  );
+});
+
+describe('request error mapping', () => {
+  beforeEach(() => {
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  test('extracts useful details from an HTTP HTML error', async () => {
+    const ds = new DataSource({} as any);
+    jest.spyOn(ds, '_request').mockReturnValue(
+      throwError(() => ({
+        status: 502,
+        statusText: 'Bad Gateway',
+        data: { response: '<html><h1>Thruk unavailable</h1></html>', message: 'Proxy failed' },
+      }))
+    );
+    await expect(ds.request('GET', '/hosts')).rejects.toThrow('502 Bad Gateway (Thruk unavailable) Proxy failed');
+  });
+
+  test('reports wrapped Thruk errors without Perl source locations', async () => {
+    const ds = new DataSource({} as any);
+    jest.spyOn(ds, '_request').mockReturnValue(
+      of({
+        data: {
+          data: { code: 400, message: 'Invalid query', description: 'Unknown column at /thruk/query.pm line 42.' },
+          meta: {},
+        },
+      })
+    );
+    await expect(ds.request('GET', '/hosts')).rejects.toThrow('400 Invalid query (Unknown column)');
   });
 });
 
