@@ -65,6 +65,14 @@ describe('replaceVariables', () => {
     expect(ds.replaceVariables('host = "^(a|b)$"')).toEqual('(host = "a" OR host = "b")');
   });
 
+  test('replaces every $time filter without changing longer variable names', () => {
+    const ds = new DataSource({} as any);
+    const range = { from: dateTime(1700000000000), to: dateTime(1700003600000) };
+    expect(ds.replaceVariables('(start = $time AND end=$time) OR time = $timezone', range)).toBe(
+      '((start >= 1700000000 AND start <= 1700003600) AND (end >= 1700000000 AND end <= 1700003600)) OR time = $timezone'
+    );
+  });
+
   test('uses array values from template service as regex alternation', () => {
     (getTemplateSrv as jest.Mock).mockReturnValue({
       replace: (str: string, _scopedVars: any, fn: (v: any) => any) => fn(['a', 'b']),

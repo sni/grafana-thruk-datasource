@@ -338,14 +338,12 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     // replace time filter
     if (range) {
-      const matches = s.match(/(\w+)\s*=\s*\$time/);
-      if (matches && matches[1]) {
-        const field = matches[1];
+      s = s.replace(/(\w+)\s*=\s*\$time\b/g, (_match, field: string) => {
         let timeFilter = '(' + field + ' >= ' + Math.floor(range.from.toDate().getTime() / 1000);
         timeFilter += ' AND ' + field + ' <= ' + Math.floor(range.to.toDate().getTime() / 1000);
         timeFilter += ')';
-        s = s.replace(matches[0], timeFilter);
-      }
+        return timeFilter;
+      });
     }
 
     // fixup list regex filters
