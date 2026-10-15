@@ -34,6 +34,19 @@ describe('query', () => {
     (getTemplateSrv as jest.Mock).mockReturnValue({ replace: (str: string) => str });
   });
 
+  test('keeps unset timestamps empty and converts valid seconds to milliseconds', async () => {
+    const ds = new DataSource({} as any);
+    jest.spyOn(ds, 'request').mockResolvedValue({
+      data: [0, null, undefined, 1700000000].map((next_check) => ({ next_check, state: 0 })),
+    });
+    const result = await ds.query({
+      targets: [{ refId: 'A', table: '/hosts', type: 'table', columns: ['next_check', 'state'] }],
+    } as unknown as DataQueryRequest<ThrukQuery>);
+    const frame = result.data[0] as DataFrame;
+    expect(frame.fields[0].values).toEqual([null, null, null, 1700000000000]);
+    expect(frame.fields[1].values).toEqual([0, 0, 0, 0]);
+  });
+
   test.each([['*'], ['label', 'count', 'checked']])(
     'builds a frame from wrapped_json with columns %j',
     async (...columns) => {

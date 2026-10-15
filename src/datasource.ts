@@ -260,7 +260,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       target.result.data.forEach((row: any) => {
         fields.forEach((f: FieldSchema) => {
           if (f.type === FieldType.time) {
-            valueArrays[f.name].push(row[f.name] * 1000);
+            valueArrays[f.name].push(row[f.name] ? row[f.name] * 1000 : null);
           } else {
             valueArrays[f.name].push(row[f.name]);
           }
