@@ -151,8 +151,9 @@ How to create a new release:
     %> vi CHANGELOG.md # add changelog entry
     %> git commit -am "Release v${RELVERSION}"
     %> git tag -a v${RELVERSION} -m "Create release tag v${RELVERSION}"
+    # optional local release build
     %> make GRAFANA_ACCESS_POLICY_TOKEN=${GRAFANA_ACCESS_POLICY_TOKEN} releasebuild
-    # create release here https://github.com/sni/grafana-thruk-datasource/releases/new
+    # the release workflow creates a draft release here https://github.com/sni/grafana-thruk-datasource/releases
     # submit plugin update here https://grafana.com/orgs/sni/plugins
 
 ## Changelog
