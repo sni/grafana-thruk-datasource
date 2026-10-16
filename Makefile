@@ -10,6 +10,8 @@ DOCKER=docker run \
 		-e "COREPACK_ENABLE_DOWNLOAD_PROMPT=0" \
 		-e "GRAFANA_ACCESS_POLICY_TOKEN=$(GRAFANA_ACCESS_POLICY_TOKEN)"
 NODEVERSION=24
+# grafana version to check compat against for buildgrafanacompat (a bare version, "latest", etc.)
+GRAFANA_COMPAT_TARGET ?= latest
 export NODE_PATH=$(shell pwd)/node_modules
 YARN=corepack yarn
 SHELL=bash
@@ -32,7 +34,7 @@ buildlockfile:
 	$(DOCKER)    --name $(PLUGINNAME)-buildlockfile node:$(NODEVERSION) bash -c "YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) install --mode=update-lockfile"
 
 buildgrafanacompat:
-	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --yes npx @grafana/levitate@latest is-compatible --path /src/src//module.ts --target @grafana/data,@grafana/ui,@grafana/runtime"
+	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --yes @grafana/levitate@latest is-compatible --path /src/src//module.ts --target @grafana/data@$(GRAFANA_COMPAT_TARGET),@grafana/ui@$(GRAFANA_COMPAT_TARGET),@grafana/runtime@$(GRAFANA_COMPAT_TARGET)"
 
 buildaudit:
 	$(DOCKER)    --name $(PLUGINNAME)-buildaudit   node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) npm audit"
