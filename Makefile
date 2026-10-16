@@ -28,8 +28,11 @@ buildyarn:
 	$(DOCKER)    --name $(PLUGINNAME)-buildyarn    node:$(NODEVERSION) bash -c "YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) $(filter-out $@,$(MAKECMDGOALS))"
 
 # re-resolve and prune yarn.lock after manual package.json edits (removes orphaned entries)
-lockfile:
+buildlockfile:
 	$(DOCKER)    --name $(PLUGINNAME)-buildlockfile node:$(NODEVERSION) bash -c "YARN_ENABLE_IMMUTABLE_INSTALLS=false $(YARN) install --mode=update-lockfile"
+
+buildgrafanacompat:
+	$(DOCKER)    --name $(PLUGINNAME)-buildsign    node:$(NODEVERSION) bash -c "$(YARN) install && npx --yes npx @grafana/levitate@latest is-compatible --path /src/src//module.ts --target @grafana/data,@grafana/ui,@grafana/runtime"
 
 buildaudit:
 	$(DOCKER)    --name $(PLUGINNAME)-buildaudit   node:$(NODEVERSION) bash -c "$(YARN) install && $(YARN) npm audit"
