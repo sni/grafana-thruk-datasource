@@ -542,6 +542,7 @@
                         "columns": [
                           "host_name",
                           "description",
+                          "last_check",
                           "state"
                         ],
                         "condition": "",
