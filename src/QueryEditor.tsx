@@ -86,22 +86,19 @@ export const QueryEditor = (props: Props) => {
       return Promise.resolve(props.datasource.cachedColumns.columns.slice());
     }
     return props.datasource
-      .request('GET', props.datasource._appendUrlParam(url, 'limit=1'), null, { 'x-thruk-columns': true })
+      .request('GET', props.datasource._appendUrlParam(url, 'limit=1'), null, {
+        'X-Thruk-Output-Metadata-Only': '1',
+        'X-THRUK-OutputFormat': 'wrapped_json',
+        'x-thruk-columns': true,
+      })
       .then((response) => {
-        if (!response.data) {
-          return ['*'];
+        const columns = response.data?.meta?.columns;
+        if (columns?.length) {
+          return columns.map((column: { name: string }) => column.name);
         }
-        if (Array.isArray(response.data) && response.data[0]) {
-          return Object.keys(response.data[0]).map((key: string, i: number) => {
-            return key;
-          });
-        }
-        if (response.data instanceof Object) {
-          return Object.keys(response.data).map((key: string, i: number) => {
-            return key;
-          });
-        }
-        return ['*'];
+        const data = response.data?.meta ? response.data.data : response.data;
+        const row = Array.isArray(data) ? data[0] : data;
+        return row instanceof Object ? Object.keys(row) : ['*'];
       })
       .then((response) => {
         props.datasource.cachedColumns = {
