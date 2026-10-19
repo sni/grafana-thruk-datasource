@@ -34,6 +34,25 @@ describe('query', () => {
     (getTemplateSrv as jest.Mock).mockReturnValue({ replace: (str: string) => str });
   });
 
+  test('initializes an executable Explore query with the displayed defaults', async () => {
+    const ds = new DataSource({} as any);
+    const query = { ...ds.getDefaultQuery?.(), refId: 'A' };
+    // Explore skips queries containing only its bookkeeping fields.
+    expect(query).toMatchObject({ table: '/', columns: ['*'], condition: '', type: 'table' });
+
+    const request = jest.spyOn(ds, 'request').mockResolvedValue({ data: { thruk_version: '3.0' } });
+    const result = await ds.query({ targets: [query] } as DataQueryRequest<ThrukQuery>);
+
+    expect(request).toHaveBeenCalledWith('GET', '?limit=1000', null, {
+      'X-THRUK-OutputFormat': 'wrapped_json',
+    });
+    expect(result.data).toHaveLength(1);
+    const frame = result.data[0] as DataFrame;
+    expect(frame.meta?.preferredVisualisationType).toBe('table');
+    expect(frame.fields[0].name).toBe('thruk_version');
+    expect(frame.fields[0].values).toEqual(['3.0']);
+  });
+
   test.each([5000, 500])('keeps timeseries points distinct and in a %i ms range', async (duration) => {
     const ds = new DataSource({} as any);
     jest.spyOn(ds, 'request').mockResolvedValue({ data: [{ name: 'host1', count: 3 }] });

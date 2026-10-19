@@ -51,6 +51,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
     };
   }
 
+  getDefaultQuery(): Partial<ThrukQuery> {
+    return { ...defaultQuery, columns: defaultQuery.columns?.slice() };
+  }
+
   // This function needs to be implemented to extend DataSourceApi
   async testDatasource() {
     const url = '/thruk?columns=thruk_version';
