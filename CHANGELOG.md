@@ -1,7 +1,9 @@
 ### Changelog
 
-next:
+2.3.2  2026-10-19
     - improve query editor layout
+    - fix default query initialization in Explore
+    - improve column discovery query performance
 
 2.3.1  2026-10-15
     - fix release workflow
