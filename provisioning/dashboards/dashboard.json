@@ -543,7 +543,10 @@
                           "host_name",
                           "description",
                           "last_check",
-                          "state"
+                          "state",
+                          "concat(1) as tst1",
+                          "null as nullcolumn",
+                          "calc(execution_time, '+', 3) as tst_exec_time"
                         ],
                         "condition": "",
                         "table": "/services",
