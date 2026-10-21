@@ -1,6 +1,6 @@
 ### Changelog
 
-next:
+2.3.3  2026-10-21
     - add raw code query editor
     - fix one failed target failing the whole panel
     - fix backtick-quoted column names showing no values
