@@ -504,7 +504,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
           }
           // result rows are keyed by the alias, not the full expression
           const alias = c.match(/\s+as\s+(\w+)$/i);
-          fields.push(this.buildField(alias ? alias[1] : c));
+          // thruk keys result rows by the column name without backticks, so the
+          // field name must drop them; the backticks stay in the api request
+          const name = (alias ? alias[1] : c).replace(/^`(.*)`$/, '$1');
+          fields.push(this.buildField(name));
           newColumns.push(c);
         }
       });

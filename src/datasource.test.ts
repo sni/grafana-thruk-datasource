@@ -164,6 +164,14 @@ test('parse variables query', async () => {
   expect(result.limit).toEqual(137);
 });
 
+test('builds field names without backticks but keeps them in the api column list', () => {
+  const ds = new DataSource({} as any);
+  const col = ds._buildColumns(['host_name', 'description', '`C:\\ used %`']);
+
+  expect(col.columns).toEqual(['host_name', 'description', '`C:\\ used %`']);
+  expect(col.fields.map((f) => f.name)).toEqual(['host_name', 'description', 'C:\\ used %']);
+});
+
 test.each(['', ' WHERE state = 0 LIMIT 25'])('parses variable query URL parameters%s', (suffix) => {
   const ds = new DataSource({} as any);
   const table = '/hosts?x=1&name=web-1.example%20host&tags=a,b';
