@@ -1,5 +1,11 @@
 ### Changelog
 
+next:
+    - add raw code query editor
+    - fix one failed target failing the whole panel
+    - fix backtick-quoted column names showing no values
+    - fix aliased columns showing no values
+
 2.3.2  2026-10-19
     - improve query editor layout
     - fix default query initialization in Explore
