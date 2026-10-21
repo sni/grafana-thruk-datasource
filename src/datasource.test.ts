@@ -80,6 +80,27 @@ describe('query', () => {
     expect(frame.fields[1].values).toEqual([0, 0, 0, 0]);
   });
 
+  test('a failed target is reported per query and the other targets still render', async () => {
+    const ds = new DataSource({} as any);
+    jest.spyOn(ds, 'request').mockImplementation((method: string, url: string) => {
+      return url.startsWith('missing')
+        ? Promise.reject(new Error('404 Not Found'))
+        : Promise.resolve({ data: [{ name: 'host1' }] });
+    });
+    const result = await ds.query({
+      targets: [
+        { refId: 'A', table: '/missing', type: 'table', columns: ['name'] },
+        { refId: 'B', table: '/hosts', type: 'table', columns: ['name'] },
+      ],
+    } as unknown as DataQueryRequest<ThrukQuery>);
+
+    expect(result.data).toHaveLength(1);
+    expect((result.data[0] as DataFrame).refId).toBe('B');
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors![0].refId).toBe('A');
+    expect(result.errors![0].message).toContain('404 Not Found');
+  });
+
   test.each([['*'], ['label', 'count', 'checked']])(
     'builds a frame from wrapped_json with columns %j',
     async (...columns) => {

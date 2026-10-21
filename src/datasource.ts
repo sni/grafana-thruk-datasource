@@ -4,6 +4,7 @@ import {
   DataQueryRequest,
   DataQueryResponse,
   DataQueryResponseData,
+  DataQueryError,
   DataSourceApi,
   DataSourceInstanceSettings,
   MetricFindValue,
@@ -125,6 +126,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     const queries: Array<Promise<any>> = [];
     const columns: ThrukColumnConfig[] = [];
+    const errors: DataQueryError[] = [];
 
     options.targets.map((target) => {
       const col: ThrukColumnConfig = this._buildColumns(target.columns);
@@ -150,11 +152,16 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       columns.push(col);
     });
 
+    const failed = new Set<number>();
     await Promise.allSettled(queries).then((results) => {
       results.forEach((result, i) => {
         switch (result.status) {
           case 'rejected':
-            throw new Error('failed to fetch data: ' + result.reason);
+            failed.add(i);
+            errors.push({
+              refId: options.targets[i].refId,
+              message: 'failed to fetch data: ' + (result.reason?.message ?? String(result.reason)),
+            });
             break;
           case 'fulfilled':
             options.targets[i].result = result.value;
@@ -165,6 +172,10 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
 
     // one query can contain multiple targets
     options.targets.map((target, i: number) => {
+      if (failed.has(i)) {
+        // the fetch failed, already recorded in `errors`; keep the other targets
+        return;
+      }
       if (!target.result || !target.result.data) {
         throw new Error('Query failed, got no result data');
       }
@@ -288,7 +299,7 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
       data.push(frame);
     });
 
-    return { data };
+    return { data, errors };
   }
 
   /**
