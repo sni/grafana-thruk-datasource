@@ -326,9 +326,11 @@ export const QueryEditor = (props: Props) => {
   return (
     <>
       <div className={styles.row}>
-        <SegmentSection label="FROM">
-          <></>
-        </SegmentSection>
+        {!codeMode && (
+          <SegmentSection label="FROM">
+            <></>
+          </SegmentSection>
+        )}
         {codeMode ? (
           <>
             <InlineField grow>
