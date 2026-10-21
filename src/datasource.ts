@@ -502,7 +502,9 @@ export class DataSource extends DataSourceApi<ThrukQuery, ThrukDataSourceOptions
             c = op + '(' + col + ')';
             op = undefined;
           }
-          fields.push(this.buildField(c));
+          // result rows are keyed by the alias, not the full expression
+          const alias = c.match(/\s+as\s+(\w+)$/i);
+          fields.push(this.buildField(alias ? alias[1] : c));
           newColumns.push(c);
         }
       });

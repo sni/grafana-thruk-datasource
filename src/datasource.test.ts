@@ -254,6 +254,12 @@ describe('_buildColumns', () => {
     const result = ds._buildColumns(['last_check']);
     expect(result.fields[0].type).toBe('time');
   });
+
+  test('alias renames the field to match the result row key', () => {
+    const result = ds._buildColumns(['concat(1) as test', 'id as site_id', 'avg(duration)']);
+    expect(result.columns).toEqual(['concat(1) as test', 'id as site_id', 'avg(duration)']);
+    expect(result.fields.map((f) => f.name)).toEqual(['test', 'site_id', 'avg(duration)']);
+  });
 });
 
 describe('metricFindQuery', () => {
