@@ -7,6 +7,9 @@ export interface ThrukQuery extends DataQuery {
   condition: string;
   limit: number;
   type: 'table' | 'graph' | 'logs' | 'timeseries';
+  codeMode?: boolean; // raw query editing mode
+  codeText?: string; // raw query text while in code mode
+  error?: string;
 
   // In wrapped_json mode, the result looks like this
   /*
